@@ -1,10 +1,10 @@
+# eventos/forms.py
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .models import Evento, Municipio
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Row, Column, Submit, HTML
-from crispy_forms.bootstrap import Field
+import pytz
+from datetime import datetime
 
 class EventoForm(forms.ModelForm):
     """Formulario para crear y editar eventos"""
@@ -36,73 +36,18 @@ class EventoForm(forms.ModelForm):
                 attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Descripción del evento (opcional)'}
             ),
             'observaciones': forms.Textarea(
-                attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observaciones adicionales (opcional)'}
+                attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Observaciones del evento (opcional)'}
             ),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # Configurar Crispy Forms
-        self.helper = FormHelper()
-        self.helper.form_method = 'post'
-        self.helper.form_class = 'needs-validation'
-        self.helper.attrs = {'novalidate': ''}
-        
-        # Layout del formulario
-        self.helper.layout = Layout(
-            Fieldset(
-                'Información Básica del Evento',
-                Row(
-                    Column('nombre', css_class='form-group col-md-8 mb-3'),
-                    Column('es_festivo', css_class='form-group col-md-4 mb-3'),
-                    css_class='form-row'
-                ),
-                Row(
-                    Column('fecha_evento', css_class='form-group col-md-6 mb-3'),
-                    Column('municipio', css_class='form-group col-md-6 mb-3'),
-                    css_class='form-row'
-                ),
-                Row(
-                    Column('lugar', css_class='form-group col-md-8 mb-3'),
-                    Column('responsable', css_class='form-group col-md-4 mb-3'),
-                    css_class='form-row'
-                ),
-            ),
-            Fieldset(
-                'Asistencia del Gobernador',
-                Row(
-                    Column('asistio_gobernador', css_class='form-group col-md-6 mb-3'),
-                    Column('representante', css_class='form-group col-md-6 mb-3'),
-                    css_class='form-row'
-                ),
-                HTML('<small class="text-muted">Si el Gobernador no asiste, especifique quién lo representa</small>'),
-            ),
-            Fieldset(
-                'Información Adicional (Opcional)',
-                'descripcion',
-                'observaciones',
-                css_class='mt-3'
-            ),
-            HTML('<hr class="my-4">'),
-            Row(
-                Column(
-                    Submit('submit', 'Guardar Evento', css_class='btn btn-success btn-lg'),
-                    css_class='col-md-6'
-                ),
-                Column(
-                    HTML('<a href="{% url \'dashboard\' %}" class="btn btn-secondary btn-lg">Cancelar</a>'),
-                    css_class='col-md-6 text-end'
-                ),
-                css_class='form-row'
-            )
-        )
-        
-        # Personalizar campos
+        # Configurar queryset de municipios
         self.fields['municipio'].queryset = Municipio.objects.filter(activo=True).order_by('nombre')
         self.fields['municipio'].empty_label = "Seleccione un municipio"
         
-        # Hacer campos requeridos más claros
+        # Hacer campos requeridos
         self.fields['nombre'].required = True
         self.fields['fecha_evento'].required = True
         self.fields['municipio'].required = True
@@ -110,12 +55,12 @@ class EventoForm(forms.ModelForm):
         self.fields['responsable'].required = True
         
         # Labels personalizados
-        self.fields['nombre'].label = "Nombre del Evento *"
-        self.fields['fecha_evento'].label = "Fecha y Hora *"
-        self.fields['municipio'].label = "Municipio *"
-        self.fields['lugar'].label = "Lugar del Evento *"
+        self.fields['nombre'].label = "Nombre del Evento"
+        self.fields['fecha_evento'].label = "Fecha y Hora"
+        self.fields['municipio'].label = "Municipio"
+        self.fields['lugar'].label = "Lugar del Evento"
         self.fields['es_festivo'].label = "¿Es un evento festivo?"
-        self.fields['responsable'].label = "Responsable/Organizador *"
+        self.fields['responsable'].label = "Responsable/Organizador"
         self.fields['asistio_gobernador'].label = "¿Asistió el Gobernador?"
         self.fields['representante'].label = "Representante (si no asistió el Gobernador)"
         self.fields['descripcion'].label = "Descripción del Evento"
@@ -127,102 +72,108 @@ class EventoForm(forms.ModelForm):
         self.fields['representante'].help_text = "Solo complete si el Gobernador no asistió"
     
     def clean_fecha_evento(self):
-        """Validar que la fecha no sea muy antigua"""
+        """Validar que la fecha sea válida"""
         fecha = self.cleaned_data.get('fecha_evento')
         if fecha:
+            # Convertir a zona de México si es necesario
+            mexico_tz = pytz.timezone('America/Mexico_City')
+            
+            # Si la fecha no tiene zona horaria, asumimos que es en zona de México
+            if timezone.is_naive(fecha):
+                fecha = mexico_tz.localize(fecha)
+            
             # Permitir fechas hasta 1 año atrás
-            fecha_limite = timezone.now() - timezone.timedelta(days=365)
+            ahora = timezone.now()
+            fecha_limite = ahora - timezone.timedelta(days=365)
+            
             if fecha < fecha_limite:
                 raise ValidationError("La fecha del evento no puede ser mayor a 1 año atrás.")
+            
+            # Convertir a UTC para almacenamiento (sin usar timezone.utc)
+            fecha_utc = fecha.astimezone(pytz.UTC)
+            return fecha_utc
+        
         return fecha
     
-    def clean_representante(self):
-        """Validar representante según asistencia del gobernador"""
-        asistio = self.cleaned_data.get('asistio_gobernador')
-        representante = self.cleaned_data.get('representante')
-        
-        if not asistio and not representante:
-            raise ValidationError("Debe especificar quién asistió como representante.")
-        
-        if asistio and representante:
-            # Limpiar el campo si el gobernador asistió
-            return None
-            
-        return representante
-    
     def clean_nombre(self):
-        """Validar que el nombre no esté duplicado para la misma fecha"""
+        """Validar el nombre del evento"""
         nombre = self.cleaned_data.get('nombre')
-        fecha_evento = self.cleaned_data.get('fecha_evento')
-        
-        if nombre and fecha_evento:
-            # Excluir el evento actual si estamos editando
-            queryset = Evento.objects.filter(
-                nombre__iexact=nombre,
-                fecha_evento__date=fecha_evento.date()
-            )
-            
-            if self.instance.pk:
-                queryset = queryset.exclude(pk=self.instance.pk)
-            
-            if queryset.exists():
-                raise ValidationError(
-                    f"Ya existe un evento con el nombre '{nombre}' para la fecha {fecha_evento.date()}."
-                )
-        
+        if nombre:
+            if len(nombre.strip()) < 5:
+                raise ValidationError("El nombre del evento debe tener al menos 5 caracteres.")
         return nombre
+    
+    def clean(self):
+        """Validación cruzada del formulario"""
+        cleaned_data = super().clean()
+        asistio_gobernador = cleaned_data.get('asistio_gobernador')
+        representante = cleaned_data.get('representante')
+        
+        # Si no asistió el gobernador, debe haber un representante
+        if not asistio_gobernador and not representante:
+            raise ValidationError({
+                'representante': 'Debe especificar quién asistió como representante si el Gobernador no asistió.'
+            })
+        
+        # Si asistió el gobernador, limpiar el campo representante
+        if asistio_gobernador and representante:
+            cleaned_data['representante'] = ''
+        
+        return cleaned_data
 
 
 class FiltroEventosForm(forms.Form):
-    """Formulario para filtrar eventos en las listas"""
-    
-    OPCIONES_ASISTENCIA = [
-        ('', 'Todos'),
-        ('True', 'Asistió el Gobernador'),
-        ('False', 'Asistió Representante'),
-    ]
-    
-    OPCIONES_TIPO = [
-        ('', 'Todos'),
-        ('True', 'Festivos'),
-        ('False', 'Regulares'),
-    ]
+    """Formulario para filtrar eventos"""
     
     fecha_desde = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        label="Desde"
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        }),
+        label="Fecha desde"
     )
+    
     fecha_hasta = forms.DateField(
         required=False,
-        widget=forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-        label="Hasta"
+        widget=forms.DateInput(attrs={
+            'type': 'date',
+            'class': 'form-control'
+        }),
+        label="Fecha hasta"
     )
+    
     municipio = forms.ModelChoiceField(
-        queryset=Municipio.objects.filter(activo=True).order_by('nombre'),
+        queryset=Municipio.objects.filter(activo=True),
         required=False,
         empty_label="Todos los municipios",
-        widget=forms.Select(attrs={'class': 'form-control'}),
+        widget=forms.Select(attrs={'class': 'form-select'}),
         label="Municipio"
     )
-    asistencia = forms.ChoiceField(
-        choices=OPCIONES_ASISTENCIA,
+    
+    estado = forms.ChoiceField(
+        choices=[('', 'Todos los estados')] + Evento.ESTADO_CHOICES,
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        label="Asistencia"
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Estado del evento"
     )
-    tipo_evento = forms.ChoiceField(
-        choices=OPCIONES_TIPO,
+    
+    asistio_gobernador = forms.ChoiceField(
+        choices=[
+            ('', 'Todos'),
+            ('True', 'Asistió el Gobernador'),
+            ('False', 'Asistió Representante')
+        ],
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control'}),
-        label="Tipo de Evento"
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Tipo de asistencia"
     )
+    
     buscar = forms.CharField(
         required=False,
-        max_length=100,
         widget=forms.TextInput(attrs={
             'class': 'form-control',
-            'placeholder': 'Buscar por nombre, lugar o responsable...'
+            'placeholder': 'Buscar en nombre, lugar, responsable...'
         }),
-        label="Buscar"
+        label="Búsqueda general"
     )

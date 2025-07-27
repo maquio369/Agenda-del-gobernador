@@ -1,6 +1,8 @@
+# eventos/models.py
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+import pytz
 
 class Municipio(models.Model):
     """Modelo para los municipios de Chiapas"""
@@ -75,22 +77,33 @@ class Evento(models.Model):
         ordering = ['-fecha_evento']
     
     def __str__(self):
-        return f"{self.nombre} - {self.municipio.nombre} - {self.fecha_evento.strftime('%d/%m/%Y')}"
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        fecha_mexico = self.fecha_evento.astimezone(mexico_tz)
+        return f"{self.nombre} - {self.municipio.nombre} - {fecha_mexico.strftime('%d/%m/%Y %H:%M')}"
+    
+    def get_fecha_mexico(self):
+        """Retorna la fecha del evento en zona horaria de México"""
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        return self.fecha_evento.astimezone(mexico_tz)
     
     def actualizar_estado_automatico(self):
         """Actualiza el estado del evento automáticamente basado en la fecha/hora"""
-        ahora = timezone.now()
+        # Obtener fecha/hora actual en zona de México
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        fecha_evento_mexico = self.fecha_evento.astimezone(mexico_tz)
         
         # Si el evento fue finalizado manualmente, no cambiar
         if self.fecha_finalizacion_manual:
             return self.estado
         
         # Si el evento aún no ha empezado
-        if ahora < self.fecha_evento:
+        if ahora_mexico < fecha_evento_mexico:
             nuevo_estado = 'programado'
         
         # Si el evento ya empezó pero no ha pasado 1 hora
-        elif ahora >= self.fecha_evento and ahora < (self.fecha_evento + timezone.timedelta(hours=1)):
+        elif (ahora_mexico >= fecha_evento_mexico and 
+              ahora_mexico < (fecha_evento_mexico + timezone.timedelta(hours=1))):
             nuevo_estado = 'en_curso'
         
         # Si ya pasó más de 1 hora desde que empezó
@@ -99,6 +112,9 @@ class Evento(models.Model):
         
         # Solo actualizar si el estado cambió
         if self.estado != nuevo_estado:
+            print(f"DEBUG MODEL - Actualizando estado de {self.nombre}: {self.estado} -> {nuevo_estado}")
+            print(f"DEBUG MODEL - Ahora México: {ahora_mexico}")
+            print(f"DEBUG MODEL - Evento México: {fecha_evento_mexico}")
             self.estado = nuevo_estado
             self.save(update_fields=['estado', 'fecha_actualizacion'])
         
@@ -118,29 +134,43 @@ class Evento(models.Model):
     
     @property
     def es_evento_hoy(self):
-        """Verifica si el evento es hoy"""
-        return self.fecha_evento.date() == timezone.now().date()
+        """Verifica si el evento es hoy (en zona de México)"""
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        fecha_evento_mexico = self.fecha_evento.astimezone(mexico_tz)
+        return fecha_evento_mexico.date() == ahora_mexico.date()
     
     @property
     def es_evento_proximo(self):
-        """Verifica si el evento es en los próximos 7 días"""
-        hoy = timezone.now().date()
-        return self.fecha_evento.date() >= hoy and self.fecha_evento.date() <= hoy + timezone.timedelta(days=7)
+        """Verifica si el evento es en los próximos 7 días (en zona de México)"""
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        fecha_evento_mexico = self.fecha_evento.astimezone(mexico_tz)
+        fecha_limite = ahora_mexico.date() + timezone.timedelta(days=7)
+        return (fecha_evento_mexico.date() >= ahora_mexico.date() and 
+                fecha_evento_mexico.date() <= fecha_limite)
     
     @property
     def puede_finalizar_manualmente(self):
         """Verifica si el evento puede ser finalizado manualmente"""
-        ahora = timezone.now()
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        fecha_evento_mexico = self.fecha_evento.astimezone(mexico_tz)
+        
         # Puede finalizar si ya empezó y no está finalizado manualmente
-        return (ahora >= self.fecha_evento and 
+        return (ahora_mexico >= fecha_evento_mexico and 
                 self.estado != 'finalizado' and 
                 not self.fecha_finalizacion_manual)
     
     @property
     def tiempo_transcurrido(self):
         """Retorna el tiempo transcurrido desde que empezó el evento"""
-        if timezone.now() >= self.fecha_evento:
-            return timezone.now() - self.fecha_evento
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        ahora_mexico = timezone.now().astimezone(mexico_tz)
+        fecha_evento_mexico = self.fecha_evento.astimezone(mexico_tz)
+        
+        if ahora_mexico >= fecha_evento_mexico:
+            return ahora_mexico - fecha_evento_mexico
         return None
     
     def clean(self):

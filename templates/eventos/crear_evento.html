@@ -1,41 +1,414 @@
 {% extends 'base/base.html' %}
-{% load crispy_forms_tags %}
 
 {% block title %}Crear Evento - Sistema de Eventos del Gobernador{% endblock %}
 
 {% block extra_css %}
 <style>
-    .form-container {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
+/* Variables CSS personalizadas */
+:root {
+    --pantone-teal: #009885;
+    --pantone-black: #2b2b2b;
+    --pantone-beige: #f4a261;
+    --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89e 100%);
+    --gradient-accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-beige: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.form-container {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.form-card {
+    background: white;
+    border-radius: 25px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.form-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: white;
+    border-radius: 25px 25px 0 0;
+    transform: translateY(10px);
+}
+
+.form-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.form-header .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.quick-form {
+    padding: 2.5rem;
+}
+
+.form-section {
+    background: #f8f9fb;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--pantone-teal);
+    position: relative;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--pantone-black);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--gradient-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--pantone-black);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.required-asterisk {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.form-control {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    border-color: var(--pantone-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 152, 133, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.94 2.94L7.88 7 9 8.12 3.23 13.9z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.5 5.5 1 1M6.5 5.5l-1 1'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-select {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-select:focus {
+    border-color: var(--pantone-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 152, 133, 0.15);
+}
+
+.form-check {
+    background: white;
+    border-radius: 15px;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.form-check:hover {
+    border-color: var(--pantone-teal);
+    transform: translateY(-1px);
+}
+
+.form-check-input:checked {
+    background-color: var(--pantone-teal);
+    border-color: var(--pantone-teal);
+}
+
+.form-check-label {
+    font-weight: 600;
+    color: var(--pantone-black);
+    cursor: pointer;
+}
+
+.btn-group-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn-toggle {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    background: white;
+    color: var(--pantone-black);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-toggle:hover {
+    border-color: var(--pantone-teal);
+    transform: translateY(-1px);
+}
+
+.btn-toggle.active {
+    background: var(--gradient-primary);
+    border-color: var(--pantone-teal);
+    color: white;
+}
+
+.btn-primary-custom {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 152, 133, 0.4);
+    color: white;
+}
+
+.btn-secondary-custom {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.btn-secondary-custom:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    color: white;
+}
+
+.quick-tips {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    color: white;
+    margin-top: 2rem;
+}
+
+.quick-tips h6 {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.quick-tips ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.quick-tips li {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.floating-save {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 152, 133, 0.3);
+}
+
+.form-errors {
+    background: #fff5f5;
+    border: 2px solid #feb2b2;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #c53030;
+}
+
+.success-message {
+    background: #f0fff4;
+    border: 2px solid #9ae6b4;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: #276749;
+}
+
+.input-group-icon {
+    position: relative;
+}
+
+.input-group-icon .form-control {
+    padding-left: 3rem;
+}
+
+.input-group-icon .icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 3;
+}
+
+.character-count {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.form-section:nth-child(2) { animation-delay: 0.1s; }
+.form-section:nth-child(3) { animation-delay: 0.2s; }
+.form-section:nth-child(4) { animation-delay: 0.3s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-header h1 {
+        font-size: 1.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
-    .form-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-    }
-    
-    .form-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px 15px 0 0;
-        text-align: center;
-    }
-    
-    .required-field {
-        color: #dc3545;
+    .quick-form {
+        padding: 1.5rem;
     }
     
     .form-section {
-        border-left: 4px solid #667eea;
-        background-color: #f8f9fa;
         padding: 1rem;
-        margin: 1rem 0;
-        border-radius: 5px;
     }
+    
+    .floating-save {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin-top: 2rem;
+    }
+    
+    .btn-group-toggle {
+        flex-direction: column;
+    }
+}
+
+/* Estados especiales */
+.representante-section {
+    display: none;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.representante-section.show {
+    display: block;
+}
+
+.festivo-badge {
+    display: inline-block;
+    background: var(--gradient-beige);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
 </style>
 {% endblock %}
 
@@ -43,39 +416,297 @@
 <div class="form-container">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-10 col-xl-8">
                 <div class="form-card">
+                    <!-- Header del formulario -->
                     <div class="form-header">
-                        <h2 class="mb-0">
-                            <i class="fas fa-calendar-plus fa-2x mb-3"></i><br>
+                        <h1>
+                            <i class="fas fa-calendar-plus"></i>
                             Crear Nuevo Evento
-                        </h2>
-                        <p class="mb-0">Complete la información del evento del Gobernador</p>
+                        </h1>
+                        <p class="subtitle">Registro rápido para la agenda del Gobernador</p>
                     </div>
-                    
-                    <div class="card-body p-4">
-                        <form method="post" class="needs-validation" novalidate>
+
+                    <!-- Formulario principal -->
+                    <div class="quick-form">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                    {% if message.tags == 'error' %}
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                    {% else %}
+                                        <i class="fas fa-check-circle me-2"></i>
+                                    {% endif %}
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+
+                        <form method="post" id="eventoForm" class="needs-validation" novalidate>
                             {% csrf_token %}
-                            
-                            <!-- Información importante -->
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                <strong>Información:</strong> Los campos marcados con 
-                                <span class="required-field">*</span> son obligatorios.
+
+                            <!-- Sección 1: Información Básica -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <div class="section-icon">
+                                        <i class="fas fa-info-circle"></i>
+                                    </div>
+                                    Información Básica del Evento
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-tag"></i>
+                                            Nombre del Evento
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <div class="input-group-icon">
+                                            <i class="fas fa-calendar-alt icon"></i>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="nombre" 
+                                                   id="id_nombre"
+                                                   placeholder="Ej: Inauguración de Hospital Regional"
+                                                   maxlength="200"
+                                                   required>
+                                        </div>
+                                        <div class="character-count">
+                                            <span id="nombre-count">0</span>/200 caracteres
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-calendar-day"></i>
+                                            Fecha y Hora
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <input type="datetime-local" 
+                                               class="form-control" 
+                                               name="fecha_evento" 
+                                               id="id_fecha_evento"
+                                               required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                            Municipio
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <select class="form-select" name="municipio" id="id_municipio" required>
+                                            <option value="">Seleccione un municipio...</option>
+                                            {% for municipio in form.municipio.field.queryset %}
+                                                <option value="{{ municipio.pk }}">{{ municipio.nombre }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-building"></i>
+                                            Lugar Específico
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <div class="input-group-icon">
+                                            <i class="fas fa-map-pin icon"></i>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="lugar" 
+                                                   id="id_lugar"
+                                                   placeholder="Ej: Auditorio Municipal, Centro de la Ciudad"
+                                                   maxlength="300"
+                                                   required>
+                                        </div>
+                                        <div class="character-count">
+                                            <span id="lugar-count">0</span>/300 caracteres
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <!-- Formulario con Crispy Forms -->
-                            {% crispy form %}
+
+                            <!-- Sección 2: Responsable y Tipo de Evento -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <div class="section-icon">
+                                        <i class="fas fa-user-tie"></i>
+                                    </div>
+                                    Organizador y Tipo de Evento
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-8 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-user-cog"></i>
+                                            Responsable u Organizador
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <div class="input-group-icon">
+                                            <i class="fas fa-user icon"></i>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="responsable" 
+                                                   id="id_responsable"
+                                                   placeholder="Ej: Secretario de Salud, Alcalde Municipal"
+                                                   maxlength="200"
+                                                   required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-star"></i>
+                                            Tipo de Evento
+                                        </label>
+                                        <div class="form-check">
+                                            <input class="form-check-input" 
+                                                   type="checkbox" 
+                                                   name="es_festivo" 
+                                                   id="id_es_festivo">
+                                            <label class="form-check-label" for="id_es_festivo">
+                                                <i class="fas fa-calendar-check"></i>
+                                                Evento Festivo
+                                                <span class="festivo-badge" id="festivo-badge" style="display: none;">
+                                                    <i class="fas fa-star"></i> FESTIVO
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sección 3: Asistencia del Gobernador -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <div class="section-icon">
+                                        <i class="fas fa-crown"></i>
+                                    </div>
+                                    Asistencia del Gobernador
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-user-check"></i>
+                                            ¿Asistirá el Gobernador personalmente?
+                                        </label>
+                                        <div class="btn-group-toggle">
+                                            <button type="button" 
+                                                    class="btn-toggle active" 
+                                                    data-value="true" 
+                                                    data-target="asistio_gobernador">
+                                                <i class="fas fa-user-check"></i>
+                                                Sí, asistirá el Gobernador
+                                            </button>
+                                            <button type="button" 
+                                                    class="btn-toggle" 
+                                                    data-value="false" 
+                                                    data-target="asistio_gobernador">
+                                                <i class="fas fa-user-friends"></i>
+                                                No, enviará representante
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="asistio_gobernador" id="id_asistio_gobernador" value="true">
+                                    </div>
+                                </div>
+
+                                <!-- Campo representante (oculto por defecto) -->
+                                <div class="row representante-section" id="representante-section">
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-user-alt"></i>
+                                            Nombre del Representante
+                                            <span class="required-asterisk">*</span>
+                                        </label>
+                                        <div class="input-group-icon">
+                                            <i class="fas fa-user-tie icon"></i>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="representante" 
+                                                   id="id_representante"
+                                                   placeholder="Ej: Secretario General de Gobierno"
+                                                   maxlength="200">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sección 4: Información Adicional (Opcional) -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <div class="section-icon">
+                                        <i class="fas fa-clipboard-list"></i>
+                                    </div>
+                                    Información Adicional <small class="text-muted">(Opcional)</small>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-align-left"></i>
+                                            Descripción del Evento
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  name="descripcion" 
+                                                  id="id_descripcion"
+                                                  rows="3"
+                                                  placeholder="Descripción breve del evento (opcional)"
+                                                  maxlength="500"></textarea>
+                                        <div class="character-count">
+                                            <span id="descripcion-count">0</span>/500 caracteres
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">
+                                            <i class="fas fa-sticky-note"></i>
+                                            Observaciones Especiales
+                                        </label>
+                                        <textarea class="form-control" 
+                                                  name="observaciones" 
+                                                  id="id_observaciones"
+                                                  rows="3"
+                                                  placeholder="Notas importantes, logística, etc. (opcional)"
+                                                  maxlength="500"></textarea>
+                                        <div class="character-count">
+                                            <span id="observaciones-count">0</span>/500 caracteres
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <a href="{% url 'dashboard' %}" class="btn-secondary-custom">
+                                        <i class="fas fa-arrow-left"></i>
+                                        Cancelar
+                                    </a>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button type="submit" class="btn-primary-custom">
+                                        <i class="fas fa-save"></i>
+                                        Crear Evento
+                                    </button>
+                                </div>
+                            </div>
                         </form>
-                        
-                        <!-- Ayuda adicional -->
-                        <div class="mt-4 p-3 bg-light rounded">
-                            <h6><i class="fas fa-lightbulb me-2"></i>Consejos:</h6>
-                            <ul class="mb-0 small text-muted">
-                                <li>Asegúrese de que la fecha y hora sean correctas</li>
-                                <li>El campo "Lugar" debe ser específico (ej. "Auditorio Municipal, Centro")</li>
-                                <li>Si el Gobernador no asiste, especifique quién lo representa</li>
-                                <li>Use las observaciones para notas importantes del evento</li>
+
+                        <!-- Tips rápidos -->
+                        <div class="quick-tips">
+                            <h6>
+                                <i class="fas fa-lightbulb"></i>
+                                Tips para una captura rápida
+                            </h6>
+                            <ul>
+                                <li><strong>Nombre:</strong> Sea específico y claro (ej: "Inauguración Hospital Regional" vs "Evento")</li>
+                                <li><strong>Lugar:</strong> Incluya dirección específica para facilitar la logística</li>
+                                <li><strong>Responsable:</strong> Nombre completo y cargo de quien organiza o invita</li>
+                                <li><strong>Fecha:</strong> Verifique la fecha y hora correctas antes de guardar</li>
+                                <li><strong>Tip:</strong> Use Tab para navegar rápidamente entre campos</li>
                             </ul>
                         </div>
                     </div>
@@ -84,60 +715,378 @@
         </div>
     </div>
 </div>
+
+<!-- Botón flotante para dispositivos móviles -->
+<div class="floating-save d-md-none">
+    <button type="submit" form="eventoForm" class="btn-primary-custom">
+        <i class="fas fa-save"></i>
+        Guardar
+    </button>
+</div>
 {% endblock %}
 
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Validación del formulario
-    const form = document.querySelector('.needs-validation');
-    const asistioCheckbox = document.querySelector('#id_asistio_gobernador');
-    const representanteField = document.querySelector('#id_representante');
-    const representanteGroup = representanteField.closest('.form-group');
-    
-    // Manejar visibilidad del campo representante
-    function toggleRepresentante() {
-        if (asistioCheckbox.checked) {
-            representanteGroup.style.display = 'none';
-            representanteField.value = '';
-            representanteField.required = false;
-        } else {
-            representanteGroup.style.display = 'block';
-            representanteField.required = true;
-        }
+    // Referencias a elementos
+    const form = document.getElementById('eventoForm');
+    const asistioButtons = document.querySelectorAll('[data-target="asistio_gobernador"]');
+    const asistioInput = document.getElementById('id_asistio_gobernador');
+    const representanteSection = document.getElementById('representante-section');
+    const representanteInput = document.getElementById('id_representante');
+    const festivoCheckbox = document.getElementById('id_es_festivo');
+    const festivoBadge = document.getElementById('festivo-badge');
+
+    // Función para manejar botones toggle
+    function setupToggleButtons() {
+        asistioButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const value = this.dataset.value;
+                const isAsistira = value === 'true';
+                
+                // Actualizar estado de botones
+                asistioButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Actualizar input oculto
+                asistioInput.value = value;
+                
+                // Mostrar/ocultar sección de representante
+                if (isAsistira) {
+                    representanteSection.classList.remove('show');
+                    representanteInput.value = '';
+                    representanteInput.removeAttribute('required');
+                } else {
+                    representanteSection.classList.add('show');
+                    representanteInput.setAttribute('required', 'required');
+                    setTimeout(() => representanteInput.focus(), 300);
+                }
+            });
+        });
     }
-    
-    // Inicializar estado
-    toggleRepresentante();
-    
-    // Escuchar cambios
-    asistioCheckbox.addEventListener('change', toggleRepresentante);
-    
-    // Validación en envío
-    form.addEventListener('submit', function(event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-        form.classList.add('was-validated');
-    });
-    
-    // Validación en tiempo real para fechas
-    const fechaInput = document.querySelector('#id_fecha_evento');
-    if (fechaInput) {
-        fechaInput.addEventListener('change', function() {
-            const fecha = new Date(this.value);
-            const ahora = new Date();
-            const unAnioAtras = new Date();
-            unAnioAtras.setFullYear(ahora.getFullYear() - 1);
-            
-            if (fecha < unAnioAtras) {
-                this.setCustomValidity('La fecha no puede ser mayor a 1 año atrás');
+
+    // Función para manejar checkbox festivo
+    function setupFestivoToggle() {
+        festivoCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                festivoBadge.style.display = 'inline-block';
             } else {
-                this.setCustomValidity('');
+                festivoBadge.style.display = 'none';
             }
         });
     }
+
+    // Función para contar caracteres
+    function setupCharacterCounters() {
+        const fields = [
+            { id: 'id_nombre', counter: 'nombre-count', max: 200 },
+            { id: 'id_lugar', counter: 'lugar-count', max: 300 },
+            { id: 'id_descripcion', counter: 'descripcion-count', max: 500 },
+            { id: 'id_observaciones', counter: 'observaciones-count', max: 500 }
+        ];
+
+        fields.forEach(field => {
+            const input = document.getElementById(field.id);
+            const counter = document.getElementById(field.counter);
+            
+            if (input && counter) {
+                input.addEventListener('input', function() {
+                    const length = this.value.length;
+                    counter.textContent = length;
+                    
+                    // Cambiar color si se acerca al límite
+                    if (length > field.max * 0.9) {
+                        counter.style.color = '#e74c3c';
+                    } else if (length > field.max * 0.75) {
+                        counter.style.color = '#f39c12';
+                    } else {
+                        counter.style.color = '#6c757d';
+                    }
+                });
+            }
+        });
+    }
+
+    // Función para validación en tiempo real
+    function setupRealTimeValidation() {
+        const requiredFields = form.querySelectorAll('[required]');
+        
+        requiredFields.forEach(field => {
+            field.addEventListener('input', function() {
+                validateField(this);
+            });
+            
+            field.addEventListener('blur', function() {
+                validateField(this);
+            });
+        });
+    }
+
+    // Función para validar campo individual
+    function validateField(field) {
+        const value = field.value.trim();
+        const isValid = field.checkValidity();
+        
+        // Remover clases previas
+        field.classList.remove('is-valid', 'is-invalid');
+        
+        if (value.length > 0) {
+            if (isValid) {
+                field.classList.add('is-valid');
+            } else {
+                field.classList.add('is-invalid');
+            }
+        }
+    }
+
+    // Función para validar fecha
+    function setupDateValidation() {
+        const fechaInput = document.getElementById('id_fecha_evento');
+        
+        if (fechaInput) {
+            // Establecer fecha mínima (hoy)
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            fechaInput.min = minDateTime;
+            
+            fechaInput.addEventListener('change', function() {
+                const selectedDate = new Date(this.value);
+                const currentDate = new Date();
+                
+                if (selectedDate < currentDate) {
+                    this.setCustomValidity('La fecha no puede ser anterior a la fecha actual');
+                    this.classList.add('is-invalid');
+                } else {
+                    this.setCustomValidity('');
+                    this.classList.remove('is-invalid');
+                    if (this.value) {
+                        this.classList.add('is-valid');
+                    }
+                }
+            });
+        }
+    }
+
+    // Función para autocompletado inteligente
+    function setupSmartAutocomplete() {
+        const nombreInput = document.getElementById('id_nombre');
+        const lugarInput = document.getElementById('id_lugar');
+        const responsableInput = document.getElementById('id_responsable');
+
+        // Sugerencias comunes para nombres de eventos
+        const eventosComunes = [
+            'Inauguración de',
+            'Entrega de',
+            'Ceremonia de',
+            'Reunión con',
+            'Visita a',
+            'Supervisión de',
+            'Gira de trabajo en',
+            'Audiencia pública en'
+        ];
+
+        // Sugerencias para lugares
+        const lugaresComunes = [
+            'Palacio Municipal',
+            'Casa de la Cultura',
+            'Auditorio Municipal',
+            'Plaza Central',
+            'Centro de Salud',
+            'Escuela Primaria',
+            'Hospital Regional',
+            'Parque Central'
+        ];
+
+        // Crear datalist para autocompletado
+        function createDatalist(input, suggestions, listId) {
+            let datalist = document.getElementById(listId);
+            if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = listId;
+                input.setAttribute('list', listId);
+                input.parentNode.appendChild(datalist);
+            }
+
+            datalist.innerHTML = '';
+            suggestions.forEach(suggestion => {
+                const option = document.createElement('option');
+                option.value = suggestion;
+                datalist.appendChild(option);
+            });
+        }
+
+        if (nombreInput) {
+            createDatalist(nombreInput, eventosComunes, 'eventos-comunes');
+        }
+
+        if (lugarInput) {
+            createDatalist(lugarInput, lugaresComunes, 'lugares-comunes');
+        }
+    }
+
+    // Función para validación del formulario completo
+    function setupFormValidation() {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            // Validar representante si es necesario
+            const asistira = asistioInput.value === 'true';
+            if (!asistira && !representanteInput.value.trim()) {
+                representanteInput.setCustomValidity('Este campo es obligatorio cuando el Gobernador no asiste');
+                representanteInput.classList.add('is-invalid');
+                representanteSection.classList.add('show');
+                representanteInput.focus();
+                return false;
+            } else {
+                representanteInput.setCustomValidity('');
+            }
+
+            // Validar todos los campos requeridos
+            const isValid = form.checkValidity();
+            form.classList.add('was-validated');
+
+            if (isValid) {
+                // Mostrar indicador de carga
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                submitBtn.disabled = true;
+
+                // Enviar formulario
+                form.submit();
+            } else {
+                // Enfocar el primer campo con error
+                const firstInvalid = form.querySelector('.is-invalid, :invalid');
+                if (firstInvalid) {
+                    firstInvalid.focus();
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+    }
+
+    // Función para atajos de teclado
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            // Ctrl/Cmd + Enter para enviar
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                form.dispatchEvent(new Event('submit'));
+            }
+            
+            // Escape para cancelar
+            if (event.key === 'Escape') {
+                if (confirm('¿Está seguro de que desea cancelar? Se perderán los datos no guardados.')) {
+                    window.location.href = "{% url 'dashboard' %}";
+                }
+            }
+        });
+    }
+
+    // Función para guardar borrador local (opcional)
+    function setupAutoSave() {
+        const formData = {};
+        const inputs = form.querySelectorAll('input, select, textarea');
+        
+        // Cargar datos guardados
+        function loadDraft() {
+            const savedData = localStorage.getItem('evento_draft');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    Object.keys(data).forEach(key => {
+                        const input = form.querySelector(`[name="${key}"]`);
+                        if (input && data[key]) {
+                            input.value = data[key];
+                            if (input.type === 'checkbox') {
+                                input.checked = data[key] === 'true';
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.log('Error cargando borrador:', e);
+                }
+            }
+        }
+
+        // Guardar datos cada vez que cambie algo
+        function saveDraft() {
+            const data = {};
+            inputs.forEach(input => {
+                if (input.name) {
+                    if (input.type === 'checkbox') {
+                        data[input.name] = input.checked.toString();
+                    } else {
+                        data[input.name] = input.value;
+                    }
+                }
+            });
+            localStorage.setItem('evento_draft', JSON.stringify(data));
+        }
+
+        // Limpiar borrador al enviar exitosamente
+        form.addEventListener('submit', function() {
+            localStorage.removeItem('evento_draft');
+        });
+
+        // Guardar cada 2 segundos
+        inputs.forEach(input => {
+            input.addEventListener('input', debounce(saveDraft, 2000));
+        });
+
+        // Cargar borrador al iniciar
+        loadDraft();
+    }
+
+    // Función debounce para optimizar guardado
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // Inicializar todas las funciones
+    setupToggleButtons();
+    setupFestivoToggle();
+    setupCharacterCounters();
+    setupRealTimeValidation();
+    setupDateValidation();
+    setupSmartAutocomplete();
+    setupFormValidation();
+    setupKeyboardShortcuts();
+    setupAutoSave();
+
+    // Enfocar primer campo al cargar
+    const primerCampo = document.getElementById('id_nombre');
+    if (primerCampo) {
+        setTimeout(() => primerCampo.focus(), 500);
+    }
+
+    // Mensaje de bienvenida para ayuda rápida
+    console.log(`
+    🚀 ATAJOS DE TECLADO:
+    • Ctrl/Cmd + Enter: Guardar evento
+    • Tab: Navegar entre campos
+    • Escape: Cancelar (con confirmación)
+    
+    💡 TIPS:
+    • Los datos se guardan automáticamente como borrador
+    • Use las sugerencias de autocompletado
+    • Los campos se validan en tiempo real
+    `);
 });
 </script>
 {% endblock %}
