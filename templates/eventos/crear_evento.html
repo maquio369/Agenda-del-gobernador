@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Crear Evento - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+        padding: 2rem 0;
+    }
+    
+    .form-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 15px 15px 0 0;
+        text-align: center;
+    }
+    
+    .required-field {
+        color: #dc3545;
+    }
+    
+    .form-section {
+        border-left: 4px solid #667eea;
+        background-color: #f8f9fa;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="form-card">
+                    <div class="form-header">
+                        <h2 class="mb-0">
+                            <i class="fas fa-calendar-plus fa-2x mb-3"></i><br>
+                            Crear Nuevo Evento
+                        </h2>
+                        <p class="mb-0">Complete la información del evento del Gobernador</p>
+                    </div>
+                    
+                    <div class="card-body p-4">
+                        <form method="post" class="needs-validation" novalidate>
+                            {% csrf_token %}
+                            
+                            <!-- Información importante -->
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Información:</strong> Los campos marcados con 
+                                <span class="required-field">*</span> son obligatorios.
+                            </div>
+                            
+                            <!-- Formulario con Crispy Forms -->
+                            {% crispy form %}
+                        </form>
+                        
+                        <!-- Ayuda adicional -->
+                        <div class="mt-4 p-3 bg-light rounded">
+                            <h6><i class="fas fa-lightbulb me-2"></i>Consejos:</h6>
+                            <ul class="mb-0 small text-muted">
+                                <li>Asegúrese de que la fecha y hora sean correctas</li>
+                                <li>El campo "Lugar" debe ser específico (ej. "Auditorio Municipal, Centro")</li>
+                                <li>Si el Gobernador no asiste, especifique quién lo representa</li>
+                                <li>Use las observaciones para notas importantes del evento</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación del formulario
+    const form = document.querySelector('.needs-validation');
+    const asistioCheckbox = document.querySelector('#id_asistio_gobernador');
+    const representanteField = document.querySelector('#id_representante');
+    const representanteGroup = representanteField.closest('.form-group');
+    
+    // Manejar visibilidad del campo representante
+    function toggleRepresentante() {
+        if (asistioCheckbox.checked) {
+            representanteGroup.style.display = 'none';
+            representanteField.value = '';
+            representanteField.required = false;
+        } else {
+            representanteGroup.style.display = 'block';
+            representanteField.required = true;
+        }
+    }
+    
+    // Inicializar estado
+    toggleRepresentante();
+    
+    // Escuchar cambios
+    asistioCheckbox.addEventListener('change', toggleRepresentante);
+    
+    // Validación en envío
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+    
+    // Validación en tiempo real para fechas
+    const fechaInput = document.querySelector('#id_fecha_evento');
+    if (fechaInput) {
+        fechaInput.addEventListener('change', function() {
+            const fecha = new Date(this.value);
+            const ahora = new Date();
+            const unAnioAtras = new Date();
+            unAnioAtras.setFullYear(ahora.getFullYear() - 1);
+            
+            if (fecha < unAnioAtras) {
+                this.setCustomValidity('La fecha no puede ser mayor a 1 año atrás');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,255 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Reportes - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        transition: transform 0.3s ease;
+        border-radius: 10px;
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .download-section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        border: 2px dashed #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="report-header">
+                <div class="card-body p-4">
+                    <h2 class="mb-3">
+                        <i class="fas fa-file-alt me-2"></i>
+                        Generador de Reportes
+                    </h2>
+                    <p class="mb-0">Configure los filtros y genere reportes detallados en PDF o Excel</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-filter me-2"></i>Filtros del Reporte
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" id="filtroForm" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.fecha_desde.label }}</label>
+                            {{ form.fecha_desde }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.fecha_hasta.label }}</label>
+                            {{ form.fecha_hasta }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.municipio.label }}</label>
+                            {{ form.municipio }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">{{ form.asistencia.label }}</label>
+                            {{ form.asistencia }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.tipo_evento.label }}</label>
+                            {{ form.tipo_evento }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.buscar.label }}</label>
+                            {{ form.buscar }}
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-1"></i>Aplicar Filtros
+                            </button>
+                            <a href="{% url 'reportes' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Limpiar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas del reporte -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stats-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt fa-2x mb-2"></i>
+                    <h3>{{ total_eventos }}</h3>
+                    <p class="mb-0">Total de Eventos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check fa-2x mb-2"></i>
+                    <h3>{{ eventos_gobernador }}</h3>
+                    <p class="mb-0">Asistió Gobernador</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-friends fa-2x mb-2"></i>
+                    <h3>{{ eventos_representante }}</h3>
+                    <p class="mb-0">Asistió Representante</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stats-card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-star fa-2x mb-2"></i>
+                    <h3>{{ eventos_festivos }}</h3>
+                    <p class="mb-0">Eventos Festivos</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de descarga -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="download-section p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-2">
+                            <i class="fas fa-download me-2"></i>Descargar Reporte
+                        </h4>
+                        <p class="text-muted mb-0">
+                            Genere y descargue el reporte con los filtros aplicados. 
+                            El reporte incluirá {{ total_eventos }} eventos.
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="btn-group-vertical gap-2 w-100">
+                            <button type="button" class="btn btn-secondary btn-lg" disabled title="PDF temporalmente deshabilitado">
+                                <i class="fas fa-file-pdf me-2"></i>PDF (Próximamente)
+                            </button>
+                            <button type="button" class="btn btn-success btn-lg" onclick="generarExcel()">
+                                <i class="fas fa-file-excel me-2"></i>Descargar Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview de eventos -->
+    {% if eventos %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Vista Previa del Reporte
+                        <small class="text-muted">(Primeros 10 eventos)</small>
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Evento</th>
+                                    <th>Fecha</th>
+                                    <th>Municipio</th>
+                                    <th>Asistencia</th>
+                                    <th>Tipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for evento in eventos|slice:":10" %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ evento.nombre|truncatechars:40 }}</strong><br>
+                                        <small class="text-muted">{{ evento.lugar|truncatechars:30 }}</small>
+                                    </td>
+                                    <td>{{ evento.fecha_evento|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ evento.municipio.nombre }}</td>
+                                    <td>
+                                        {% if evento.asistio_gobernador %}
+                                            <span class="badge bg-success">Gobernador</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">Representante</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if evento.es_festivo %}
+                                            <span class="badge bg-info">Festivo</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Regular</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if eventos.count > 10 %}
+                    <div class="text-center p-3 bg-light">
+                        <small class="text-muted">
+                            Mostrando 10 de {{ total_eventos }} eventos. 
+                            Descargue el reporte completo usando los botones de arriba.
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h4 class="text-muted">No hay eventos para el reporte</h4>
+                <p class="text-muted">Modifique los filtros para incluir más eventos.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function generarPDF() {
+    const params = new URLSearchParams(window.location.search);
+    window.open('/reportes/pdf/?' + params.toString(), '_blank');
+}
+
+function generarExcel() {
+    const params = new URLSearchParams(window.location.search);
+    window.open('/reportes/excel/?' + params.toString(), '_blank');
+}
+</script>
+{% endblock %}

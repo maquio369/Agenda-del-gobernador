@@ -1,0 +1,554 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Acceso - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-teal: #009885;
+        --primary-magenta: #C90166;
+        --primary-red: #AE192D;
+        --primary-black: #010101;
+        --primary-beige: #D3C2B4;
+        --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89a 50%, #009885 100%);
+        --gradient-accent: linear-gradient(135deg, #C90166 0%, #AE192D 100%);
+        --shadow-primary: 0 20px 40px rgba(0, 152, 133, 0.15);
+        --shadow-secondary: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fffe 0%, #e8f5f3 50%, #f0f8f7 100%);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(0, 152, 133, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(201, 1, 102, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(174, 25, 45, 0.05) 0%, transparent 50%);
+        z-index: 1;
+    }
+
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-primary);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        max-width: 420px;
+        width: 100%;
+        position: relative;
+        z-index: 2;
+        animation: slideUp 0.8s ease-out;
+        max-height: 95vh;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .login-header {
+        background: var(--gradient-primary);
+        padding: 2rem 2rem 1.5rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .login-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: 
+            radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(2px, -2px) rotate(1deg); }
+        66% { transform: translate(-2px, 2px) rotate(-1deg); }
+    }
+
+    .logo-container {
+        position: relative;
+        z-index: 2;
+    }
+
+    .logo-icon {
+        width: 64px;
+        height: 64px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .logo-icon:hover {
+        transform: scale(1.05);
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .logo-icon i {
+        font-size: 2rem;
+        color: white;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-title {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+    }
+
+    .login-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.9rem;
+        font-weight: 400;
+        margin: 0;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+        line-height: 1.3;
+    }
+
+    .login-body {
+        padding: 2rem 2rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--primary-black);
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+        letter-spacing: -0.01em;
+    }
+
+    .form-control {
+        border: 2px solid #e8f0fe;
+        border-radius: 16px;
+        padding: 1rem 1.25rem;
+        font-size: 1rem;
+        background: rgba(248, 255, 254, 0.8);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-teal);
+        box-shadow: 0 0 0 4px rgba(0, 152, 133, 0.1);
+        background: white;
+        transform: translateY(-1px);
+    }
+
+    .form-control.is-invalid {
+        border-color: var(--primary-red);
+        box-shadow: 0 0 0 4px rgba(174, 25, 45, 0.1);
+    }
+
+    .input-icon {
+        position: relative;
+    }
+
+    .input-icon i {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 1rem;
+        z-index: 3;
+        transition: color 0.3s ease;
+    }
+
+    .input-icon .form-control {
+        padding-left: 3rem;
+    }
+
+    .input-icon .form-control:focus + i {
+        color: var(--primary-teal);
+    }
+
+    .btn-login {
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: 16px;
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        width: 100%;
+        transition: all 0.3s ease;
+        text-transform: none;
+        letter-spacing: 0.02em;
+        box-shadow: 0 8px 25px rgba(0, 152, 133, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-login:hover::before {
+        left: 100%;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 35px rgba(0, 152, 133, 0.4);
+        background: linear-gradient(135deg, #00a691 0%, #00c7a6 50%, #00a691 100%);
+    }
+
+    .btn-login:active {
+        transform: translateY(0);
+    }
+
+    .error-message {
+        background: linear-gradient(135deg, rgba(174, 25, 45, 0.1) 0%, rgba(201, 1, 102, 0.05) 100%);
+        border: 1px solid rgba(174, 25, 45, 0.2);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-red);
+        font-size: 0.9rem;
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+
+    .login-footer {
+        text-align: center;
+        padding: 1rem 2rem 1.5rem;
+        border-top: 1px solid rgba(211, 194, 180, 0.3);
+        background: rgba(248, 255, 254, 0.5);
+    }
+
+    .security-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(0, 152, 133, 0.1);
+        color: var(--primary-teal);
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        border: 1px solid rgba(0, 152, 133, 0.2);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .login-container {
+            padding: 10px;
+            align-items: center;
+        }
+
+        .login-card {
+            max-width: 100%;
+            margin: 0;
+            border-radius: 20px;
+            max-height: 98vh;
+        }
+
+        .login-header {
+            padding: 1.5rem 1.5rem 1rem;
+        }
+
+        .login-title {
+            font-size: 1.3rem;
+        }
+
+        .login-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .login-body {
+            padding: 1.5rem 1.5rem;
+        }
+
+        .logo-icon {
+            width: 56px;
+            height: 56px;
+            margin-bottom: 0.75rem;
+        }
+
+        .logo-icon i {
+            font-size: 1.75rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .login-container {
+            padding: 8px;
+        }
+
+        .login-header {
+            padding: 1.25rem 1rem 0.75rem;
+        }
+
+        .login-body {
+            padding: 1.25rem 1rem;
+        }
+
+        .login-footer {
+            padding: 0.75rem 1rem 1rem;
+        }
+
+        .form-control {
+            padding: 0.875rem 1rem;
+        }
+
+        .input-icon .form-control {
+            padding-left: 2.75rem;
+        }
+
+        .input-icon i {
+            left: 1rem;
+        }
+
+        .logo-icon {
+            width: 52px;
+            height: 52px;
+        }
+
+        .login-title {
+            font-size: 1.2rem;
+        }
+
+        .security-badge {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+    }
+
+    @media (max-height: 700px) {
+        .login-container {
+            align-items: flex-start;
+            padding-top: 2vh;
+        }
+        
+        .login-header {
+            padding: 1.25rem 2rem 1rem;
+        }
+        
+        .login-body {
+            padding: 1.5rem 2rem;
+        }
+        
+        .login-footer {
+            padding: 0.75rem 2rem 1rem;
+        }
+    }
+
+    /* Loading Animation */
+    .btn-login.loading {
+        position: relative;
+        color: transparent;
+    }
+
+    .btn-login.loading::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        top: 50%;
+        left: 50%;
+        margin-left: -10px;
+        margin-top: -10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-card">
+        <!-- Header -->
+        <div class="login-header">
+            <div class="logo-container">
+                <div class="logo-icon">
+                    <i class="fas fa-crown"></i>
+                </div>
+                <h1 class="login-title">Gobierno de Chiapas</h1>
+                <p class="login-subtitle">Sistema de Gestión de Eventos</p>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="login-body">
+            <form method="post" id="loginForm">
+                {% csrf_token %}
+                
+                <!-- Error Messages -->
+                {% if form.non_field_errors %}
+                    <div class="error-message">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+
+                <!-- Username Field -->
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        <i class="fas fa-user me-2"></i>Usuario
+                    </label>
+                    <div class="input-icon">
+                        <input type="text" 
+                               class="form-control {% if form.username.errors %}is-invalid{% endif %}" 
+                               id="{{ form.username.id_for_label }}"
+                               name="{{ form.username.name }}"
+                               value="{{ form.username.value|default:'' }}"
+                               placeholder="Ingrese su usuario"
+                               autocomplete="username"
+                               required>
+                        <i class="fas fa-user"></i>
+                    </div>
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.username.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password Field -->
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">
+                        <i class="fas fa-lock me-2"></i>Contraseña
+                    </label>
+                    <div class="input-icon">
+                        <input type="password" 
+                               class="form-control {% if form.password.errors %}is-invalid{% endif %}" 
+                               id="{{ form.password.id_for_label }}"
+                               name="{{ form.password.name }}"
+                               placeholder="Ingrese su contraseña"
+                               autocomplete="current-password"
+                               required>
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.password.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Login Button -->
+                <button type="submit" class="btn btn-login" id="loginBtn">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                </button>
+            </form>
+        </div>
+
+        <!-- Footer -->
+        <div class="login-footer">
+            <div class="security-badge">
+                <i class="fas fa-shield-check"></i>
+                <span>Acceso Seguro y Encriptado</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    
+    // Form submission with loading state
+    form.addEventListener('submit', function() {
+        loginBtn.classList.add('loading');
+        loginBtn.disabled = true;
+        
+        // Re-enable after 5 seconds as fallback
+        setTimeout(() => {
+            loginBtn.classList.remove('loading');
+            loginBtn.disabled = false;
+        }, 5000);
+    });
+    
+    // Input focus animations
+    const inputs = document.querySelectorAll('.form-control');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+    });
+    
+    // Auto-focus first input
+    const firstInput = document.querySelector('.form-control');
+    if (firstInput) {
+        setTimeout(() => firstInput.focus(), 500);
+    }
+});
+</script>
+{% endblock %}

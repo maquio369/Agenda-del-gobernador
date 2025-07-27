@@ -1,0 +1,375 @@
+{% extends 'base/base.html' %}
+{% load fecha_filters %}
+
+{% block title %}Estadísticas - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stats-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+    }
+    
+    .stats-card {
+        transition: transform 0.3s ease;
+        border-radius: 15px;
+        border: none;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .stats-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 400px;
+        margin: 20px 0;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .chart-header {
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .metric-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="stats-header">
+                <div class="card-body p-4">
+                    <h2 class="mb-3">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Estadísticas y Análisis
+                    </h2>
+                    <p class="mb-0">Análisis detallado de los eventos del Gobernador</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métricas principales -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card bg-primary text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar-alt metric-icon"></i>
+                    <div class="metric-number">{{ total_eventos }}</div>
+                    <h6 class="card-title">Total de Eventos</h6>
+                    <small>Eventos registrados en el sistema</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card bg-success text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-check metric-icon"></i>
+                    <div class="metric-number">{{ eventos_gobernador }}</div>
+                    <h6 class="card-title">Asistió Gobernador</h6>
+                    <small>
+                        {{ eventos_gobernador }} de {{ total_eventos }} eventos
+                        {% if total_eventos > 0 %}
+                            ({{ porcentaje_gobernador }}%)
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card bg-warning text-dark h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-friends metric-icon"></i>
+                    <div class="metric-number">{{ eventos_representante }}</div>
+                    <h6 class="card-title">Asistió Representante</h6>
+                    <small>
+                        {{ eventos_representante }} de {{ total_eventos }} eventos
+                        {% if total_eventos > 0 %}
+                            ({{ porcentaje_representante }}%)
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stats-card bg-info text-white h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-star metric-icon"></i>
+                    <div class="metric-number">{{ eventos_festivos }}</div>
+                    <h6 class="card-title">Eventos Festivos</h6>
+                    <small>
+                        {{ eventos_festivos }} de {{ total_eventos }} eventos
+                        {% if total_eventos > 0 %}
+                            ({{ porcentaje_festivos }}%)
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráficas -->
+    <div class="row mb-4">
+        <!-- Eventos por Municipio -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map-marker-alt me-2"></i>
+                        Top 10 Municipios con Más Eventos
+                    </h5>
+                </div>
+                <div class="chart-container p-3">
+                    <canvas id="municipiosChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Asistencia del Gobernador -->
+        <div class="col-lg-6 mb-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-check me-2"></i>
+                        Asistencia del Gobernador vs Representante
+                    </h5>
+                </div>
+                <div class="chart-container p-3">
+                    <canvas id="asistenciaChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <!-- Eventos por Mes -->
+        <div class="col-lg-8 mb-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar me-2"></i>
+                        Eventos por Mes (Último Año)
+                    </h5>
+                </div>
+                <div class="chart-container p-3">
+                    <canvas id="mesesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top municipios con detalle -->
+        <div class="col-lg-4 mb-4">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>
+                        Ranking de Municipios
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for municipio in top_municipios|slice:":5" %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold">{{ forloop.counter }}. {{ municipio.municipio__nombre }}</span>
+                        <span class="badge bg-primary">{{ municipio.total }} eventos</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asistencia por municipio -->
+    <div class="row">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Asistencia por Municipio (Top 15)
+                    </h5>
+                </div>
+                <div class="chart-container p-3" style="height: 500px;">
+                    <canvas id="asistenciaMunicipioChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Datos desde Django
+const municipiosData = {{ municipios_data|safe }};
+const mesesData = {{ meses_data|safe }};
+const asistenciaData = {{ asistencia_data|safe }};
+
+// Configuración de colores
+const colors = {
+    primary: '#667eea',
+    success: '#28a745',
+    warning: '#ffc107',
+    info: '#17a2b8',
+    danger: '#dc3545'
+};
+
+// Gráfica de Municipios (Doughnut)
+const municipiosCtx = document.getElementById('municipiosChart').getContext('2d');
+new Chart(municipiosCtx, {
+    type: 'doughnut',
+    data: {
+        labels: municipiosData.labels,
+        datasets: [{
+            data: municipiosData.data,
+            backgroundColor: [
+                colors.primary, colors.success, colors.warning, colors.info, colors.danger,
+                '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6c757d'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfica de Asistencia (Pie)
+const asistenciaCtx = document.getElementById('asistenciaChart').getContext('2d');
+new Chart(asistenciaCtx, {
+    type: 'pie',
+    data: {
+        labels: ['Asistió Gobernador', 'Asistió Representante'],
+        datasets: [{
+            data: [{{ eventos_gobernador }}, {{ eventos_representante }}],
+            backgroundColor: [colors.success, colors.warning],
+            borderWidth: 2,
+            borderColor: '#fff'
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    }
+});
+
+// Gráfica de Eventos por Mes (Line)
+const mesesCtx = document.getElementById('mesesChart').getContext('2d');
+new Chart(mesesCtx, {
+    type: 'line',
+    data: {
+        labels: mesesData.labels,
+        datasets: [{
+            label: 'Eventos por Mes',
+            data: mesesData.data,
+            borderColor: colors.primary,
+            backgroundColor: colors.primary + '20',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+});
+
+// Gráfica de Asistencia por Municipio (Bar)
+const asistenciaMunicipioCtx = document.getElementById('asistenciaMunicipioChart').getContext('2d');
+new Chart(asistenciaMunicipioCtx, {
+    type: 'bar',
+    data: {
+        labels: asistenciaData.labels,
+        datasets: [
+            {
+                label: 'Asistió Gobernador',
+                data: asistenciaData.gobernador,
+                backgroundColor: colors.success,
+                borderColor: colors.success,
+                borderWidth: 1
+            },
+            {
+                label: 'Asistió Representante',
+                data: asistenciaData.representante,
+                backgroundColor: colors.warning,
+                borderColor: colors.warning,
+                borderWidth: 1
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                stacked: true
+            },
+            y: {
+                stacked: true,
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'top'
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

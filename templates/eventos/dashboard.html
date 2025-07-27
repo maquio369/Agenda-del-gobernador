@@ -1,0 +1,830 @@
+{% extends 'base/base.html' %}
+{% load fecha_filters %}
+
+{% block title %}Dashboard - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --pantone-teal: #009885;
+    --pantone-magenta: #C90166;
+    --pantone-red: #AE192D;
+    --pantone-black: #010101;
+    --pantone-beige: #D3C2B4;
+    --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89a 50%, #009885 100%);
+    --gradient-accent: linear-gradient(135deg, #C90166 0%, #AE192D 100%);
+    --gradient-warning: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%);
+    --gradient-beige: linear-gradient(135deg, #D3C2B4 0%, #c7b6a8 100%);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    background: linear-gradient(135deg, #f8fffe 0%, #e8f5f3 50%, #f0f8f7 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    padding: 1rem 0;
+}
+
+.header-content {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 16px;
+    padding: 1.5rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-card);
+}
+
+.header-main {
+    flex: 1;
+    min-width: 250px;
+}
+
+.header-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+.header-subtitle {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin: 0;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-shrink: 0;
+}
+
+.date-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    padding: 0.5rem 1rem;
+    border-radius: 12px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+}
+
+.stats-container {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.stat-badge {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    min-width: 65px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    transition: all 0.3s ease;
+}
+
+.stat-badge:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.stat-badge.en-curso::before {
+    background: var(--gradient-warning);
+}
+
+.stat-badge.proximos::before {
+    background: var(--pantone-teal);
+}
+
+.stat-badge.finalizados::before {
+    background: var(--pantone-beige);
+}
+
+.stat-badge.proximos-semana::before {
+    background: var(--gradient-accent);
+}
+
+.stat-icon {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    color: white;
+}
+
+.stat-number {
+    font-size: 1.4rem;
+    font-weight: 900;
+    line-height: 1;
+    color: white;
+}
+
+.stat-label {
+    font-size: 0.65rem;
+    opacity: 0.9;
+    text-align: center;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--pantone-black);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.section-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--gradient-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 16px rgba(0, 152, 133, 0.3);
+}
+
+.event-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e9ecef;
+    box-shadow: var(--shadow-card);
+    transition: all 0.4s ease;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.event-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--gradient-primary);
+    transition: width 0.3s ease;
+}
+
+.event-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.event-card:hover::before {
+    width: 8px;
+}
+
+.event-card.en-curso::before {
+    background: var(--gradient-warning);
+}
+
+.event-card.proximo::before {
+    background: var(--gradient-accent);
+}
+
+.event-card.finalizado::before {
+    background: var(--gradient-beige);
+}
+
+.card-body {
+    padding: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+.event-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--pantone-black);
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+.meta-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 152, 133, 0.1);
+    border-radius: 6px;
+    color: var(--pantone-teal);
+    font-size: 0.75rem;
+}
+
+.event-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.badge-custom {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.badge-status {
+    background: var(--gradient-primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 152, 133, 0.3);
+}
+
+.badge-festivo {
+    background: var(--gradient-warning);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+}
+
+.badge-representante {
+    background: var(--gradient-accent);
+    color: white;
+    box-shadow: 0 2px 8px rgba(201, 1, 102, 0.3);
+}
+
+.badge-finalizado {
+    background: var(--gradient-beige);
+    color: var(--pantone-black);
+    box-shadow: 0 2px 8px rgba(211, 194, 180, 0.3);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 20px;
+    border: 2px dashed rgba(0, 152, 133, 0.3);
+    margin: 2rem 0;
+}
+
+.empty-icon {
+    width: 80px;
+    height: 80px;
+    background: rgba(0, 152, 133, 0.1);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    color: var(--pantone-teal);
+    font-size: 2rem;
+}
+
+.empty-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--pantone-black);
+    margin-bottom: 0.5rem;
+}
+
+.empty-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.btn-primary-custom {
+    background: var(--gradient-primary);
+    border: none;
+    border-radius: 12px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 152, 133, 0.3);
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 152, 133, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+@media (max-width: 992px) {
+    .header-content {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .header-main {
+        text-align: center;
+        margin-bottom: 0;
+    }
+    
+    .header-meta {
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        align-items: center;
+    }
+    
+    .stats-container {
+        justify-content: center;
+        gap: 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 0.5rem 0;
+    }
+    
+    .header-content {
+        padding: 0.75rem;
+        gap: 0.75rem;
+    }
+    
+    .header-title {
+        font-size: 1.1rem;
+        gap: 0.25rem;
+    }
+    
+    .header-subtitle {
+        font-size: 0.7rem;
+    }
+    
+    .date-badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.75rem;
+    }
+    
+    .stats-container {
+        gap: 0.4rem;
+    }
+    
+    .stat-badge {
+        min-width: 50px;
+        padding: 0.35rem 0.5rem;
+    }
+    
+    .stat-number {
+        font-size: 1.1rem;
+    }
+    
+    .stat-label {
+        font-size: 0.55rem;
+    }
+    
+    .stat-icon {
+        font-size: 0.9rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container-fluid">
+        <!-- Header simplificado con solo datos esenciales -->
+        <div class="header-content">
+            <div class="header-main">
+                <h1 class="header-title">
+                    <i class="fas fa-crown"></i>
+                    Dashboard Ejecutivo
+                </h1>
+                <p class="header-subtitle">Sistema de Gestión de Eventos del Gobernador</p>
+            </div>
+            <div class="header-meta">
+                <div class="date-badge">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>{{ fecha_actual|fecha_espanol }}</span>
+                </div>
+                <div class="stats-container">
+                    <div class="stat-badge en-curso">
+                        <i class="fas fa-play-circle stat-icon"></i>
+                        <span class="stat-number">{{ eventos_en_curso.count }}</span>
+                        <span class="stat-label">En Curso</span>
+                    </div>
+                    <div class="stat-badge proximos">
+                        <i class="fas fa-clock stat-icon"></i>
+                        <span class="stat-number">{{ eventos_hoy_proximos.count }}</span>
+                        <span class="stat-label">Próximos</span>
+                    </div>
+                    <div class="stat-badge finalizados">
+                        <i class="fas fa-check-circle stat-icon"></i>
+                        <span class="stat-number">{{ eventos_hoy_finalizados.count }}</span>
+                        <span class="stat-label">Finalizados</span>
+                    </div>
+                    <div class="stat-badge proximos-semana">
+                        <i class="fas fa-calendar-week stat-icon"></i>
+                        <span class="stat-number">{{ eventos_proximos.count }}</span>
+                        <span class="stat-label">7 Días</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Eventos en curso -->
+        {% if eventos_en_curso %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="section-title">
+                    <div class="section-icon" style="background: var(--gradient-warning);">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    En Curso Ahora
+                </h2>
+                <div class="row">
+                    {% for evento in eventos_en_curso %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="event-card en-curso">
+                            <div class="card-body">
+                                <h3 class="event-title">{{ evento.nombre }}</h3>
+                                <div class="event-meta">
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <span>{{ evento.fecha_evento|date:"H:i" }} hrs</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <span>{{ evento.municipio.nombre }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <span>{{ evento.lugar|truncatechars:30 }}</span>
+                                    </div>
+                                    {% if evento.tiempo_transcurrido %}
+                                    <div class="meta-item">
+                                        <div class="meta-icon" style="background: rgba(255, 107, 53, 0.2); color: #FF6B35;">
+                                            <i class="fas fa-stopwatch"></i>
+                                        </div>
+                                        <span>Hace {{ evento.tiempo_transcurrido|minutos_transcurridos }} min</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div class="event-badges">
+                                    <span class="badge-custom badge-status">
+                                        <i class="fas fa-broadcast-tower"></i>
+                                        En Vivo
+                                    </span>
+                                    {% if evento.es_festivo %}
+                                    <span class="badge-custom badge-festivo">
+                                        <i class="fas fa-star"></i>
+                                        Festivo
+                                    </span>
+                                    {% endif %}
+                                    {% if evento.puede_finalizar_manualmente %}
+                                    <button class="badge-custom btn btn-sm p-1" 
+                                            style="background: var(--gradient-beige); color: var(--pantone-black); border: none;"
+                                            onclick="finalizarEvento({{ evento.id }}, event)"
+                                            title="Finalizar evento">
+                                        <i class="fas fa-check"></i>
+                                        Finalizar
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Eventos próximos de hoy -->
+        {% if eventos_hoy_proximos %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="section-title">
+                    <div class="section-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    Próximos de Hoy
+                </h2>
+                <div class="row">
+                    {% for evento in eventos_hoy_proximos %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="event-card hoy">
+                            <div class="card-body">
+                                <h3 class="event-title">{{ evento.nombre }}</h3>
+                                <div class="event-meta">
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <span>{{ evento.fecha_evento|date:"H:i" }} hrs</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <span>{{ evento.municipio.nombre }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <span>{{ evento.lugar|truncatechars:30 }}</span>
+                                    </div>
+                                </div>
+                                <div class="event-badges">
+                                    {% if evento.asistio_gobernador %}
+                                    <span class="badge-custom badge-status">
+                                        <i class="fas fa-user-check"></i>
+                                        Gobernador
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-custom badge-representante">
+                                        <i class="fas fa-user-friends"></i>
+                                        Representante
+                                    </span>
+                                    {% endif %}
+                                    {% if evento.es_festivo %}
+                                    <span class="badge-custom badge-festivo">
+                                        <i class="fas fa-star"></i>
+                                        Festivo
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Eventos finalizados de hoy -->
+        {% if eventos_hoy_finalizados %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="section-title">
+                    <div class="section-icon" style="background: var(--gradient-beige);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    Finalizados de Hoy
+                </h2>
+                <div class="row">
+                    {% for evento in eventos_hoy_finalizados %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="event-card finalizado">
+                            <div class="card-body">
+                                <h3 class="event-title">{{ evento.nombre }}</h3>
+                                <div class="event-meta">
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <span>{{ evento.fecha_evento|date:"H:i" }} hrs</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <span>{{ evento.municipio.nombre }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-building"></i>
+                                        </div>
+                                        <span>{{ evento.lugar|truncatechars:30 }}</span>
+                                    </div>
+                                </div>
+                                <div class="event-badges">
+                                    <span class="badge-custom badge-finalizado">
+                                        <i class="fas fa-check"></i>
+                                        Finalizado
+                                    </span>
+                                    {% if evento.asistio_gobernador %}
+                                    <span class="badge-custom badge-status">
+                                        <i class="fas fa-user-check"></i>
+                                        Gobernador
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-custom badge-representante">
+                                        <i class="fas fa-user-friends"></i>
+                                        Representante
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Próximos eventos (7 días) -->
+        <div class="row">
+            <div class="col-12">
+                <h2 class="section-title">
+                    <div class="section-icon" style="background: var(--gradient-accent);">
+                        <i class="fas fa-calendar-week"></i>
+                    </div>
+                    Próximos Eventos (7 días)
+                </h2>
+                
+                {% if eventos_proximos %}
+                <div class="row">
+                    {% for evento in eventos_proximos %}
+                    <div class="col-lg-4 col-md-6 mb-3">
+                        <div class="event-card proximo">
+                            <div class="card-body">
+                                <h3 class="event-title">{{ evento.nombre }}</h3>
+                                <div class="event-meta">
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </div>
+                                        <span>{{ evento.fecha_evento|date:"d/m/Y" }}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-clock"></i>
+                                        </div>
+                                        <span>{{ evento.fecha_evento|date:"H:i" }} hrs</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <div class="meta-icon">
+                                            <i class="fas fa-map-marker-alt"></i>
+                                        </div>
+                                        <span>{{ evento.municipio.nombre }}</span>
+                                    </div>
+                                </div>
+                                <div class="event-badges">
+                                    {% if evento.asistio_gobernador %}
+                                    <span class="badge-custom badge-status">
+                                        <i class="fas fa-user-check"></i>
+                                        Gobernador
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-custom badge-representante">
+                                        <i class="fas fa-user-friends"></i>
+                                        Representante
+                                    </span>
+                                    {% endif %}
+                                    {% if evento.es_festivo %}
+                                    <span class="badge-custom badge-festivo">
+                                        <i class="fas fa-star"></i>
+                                        Festivo
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h3 class="empty-title">Sin eventos próximos programados</h3>
+                    <p class="empty-subtitle">Es momento ideal para planificar la agenda de la próxima semana</p>
+                    <a href="{% url 'crear_evento' %}" class="btn-primary-custom">
+                        <i class="fas fa-calendar-plus"></i>
+                        Programar Eventos
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Estado vacío si no hay eventos del día -->
+        {% if not eventos_en_curso and not eventos_hoy_proximos and not eventos_hoy_finalizados %}
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <h3 class="empty-title">Sin eventos programados para hoy</h3>
+                    <p class="empty-subtitle">Un día perfecto para planificar futuros eventos importantes</p>
+                    <a href="{% url 'crear_evento' %}" class="btn-primary-custom">
+                        <i class="fas fa-plus"></i>
+                        Programar Nuevo Evento
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const eventCards = document.querySelectorAll('.event-card');
+    eventCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+});
+
+// Función para finalizar evento manualmente
+function finalizarEvento(eventoId, event) {
+    event.stopPropagation(); // Evitar que se abra el modal
+    
+    if (confirm('¿Está seguro de que desea marcar este evento como finalizado?')) {
+        // Crear formulario y enviarlo
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/eventos/finalizar/${eventoId}/`;
+        
+        // Agregar token CSRF
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+
+{% csrf_token %}
+{% endblock %}
