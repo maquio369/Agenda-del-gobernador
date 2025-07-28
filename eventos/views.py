@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.db.models import Q, Count
 from django.db.models.functions import TruncMonth
 from django.template.loader import render_to_string
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta, datetime
 import json
 import pytz
@@ -252,30 +253,119 @@ def detalle_evento(request, pk):
 # Vista para lista de eventos
 @login_required
 def lista_eventos(request):
-    """Lista todos los eventos con filtros"""
+    """Lista todos los eventos con filtros y paginación AJAX"""
     form = FiltroEventosForm(request.GET or None)
     eventos = Evento.objects.select_related('municipio', 'creado_por').order_by('-fecha_evento')
     
+    # Aplicar filtros
     if form.is_valid():
-        if form.cleaned_data['fecha_desde']:
+        # Filtro por fecha desde
+        if form.cleaned_data.get('fecha_desde'):
             eventos = eventos.filter(fecha_evento__date__gte=form.cleaned_data['fecha_desde'])
         
-        if form.cleaned_data['fecha_hasta']:
+        # Filtro por fecha hasta
+        if form.cleaned_data.get('fecha_hasta'):
             eventos = eventos.filter(fecha_evento__date__lte=form.cleaned_data['fecha_hasta'])
         
-        if form.cleaned_data['municipio']:
+        # Filtro por municipio
+        if form.cleaned_data.get('municipio'):
             eventos = eventos.filter(municipio=form.cleaned_data['municipio'])
         
-        if form.cleaned_data['estado']:
+        # Filtro por estado
+        if form.cleaned_data.get('estado'):
             eventos = eventos.filter(estado=form.cleaned_data['estado'])
         
-        if form.cleaned_data['asistio_gobernador'] is not None:
-            eventos = eventos.filter(asistio_gobernador=form.cleaned_data['asistio_gobernador'])
+        # Filtro por asistencia del gobernador
+        asistencia = form.cleaned_data.get('asistencia')
+        if asistencia:
+            if asistencia == 'True':
+                eventos = eventos.filter(asistio_gobernador=True)
+            elif asistencia == 'False':
+                eventos = eventos.filter(asistio_gobernador=False)
+        
+        # Filtro por tipo de evento
+        tipo_evento = form.cleaned_data.get('tipo_evento')
+        if tipo_evento:
+            if tipo_evento == 'festivo':
+                eventos = eventos.filter(es_festivo=True)
+            elif tipo_evento == 'regular':
+                eventos = eventos.filter(es_festivo=False)
+        
+        # Filtro por búsqueda de texto
+        buscar = form.cleaned_data.get('buscar')
+        if buscar:
+            from django.db.models import Q
+            eventos = eventos.filter(
+                Q(nombre__icontains=buscar) |
+                Q(lugar__icontains=buscar) |
+                Q(responsable__icontains=buscar) |
+                Q(municipio__nombre__icontains=buscar) |
+                Q(representante__icontains=buscar) |
+                Q(descripcion__icontains=buscar) |
+                Q(observaciones__icontains=buscar)
+            )
     
-    return render(request, 'eventos/lista_eventos.html', {
-        'eventos': eventos,
-        'form': form
-    })
+    # Implementar paginación
+    paginator = Paginator(eventos, 4)  # 4 eventos por página
+    page_number = request.GET.get('page', 1)
+    
+    try:
+        page_obj = paginator.get_page(page_number)
+    except PageNotAnInteger:
+        page_obj = paginator.get_page(1)
+    except EmptyPage:
+        page_obj = paginator.get_page(paginator.num_pages)
+    
+    # Calcular estadísticas
+    total_eventos = eventos.count()
+    hoy = timezone.now().date()
+    eventos_hoy = eventos.filter(fecha_evento__date=hoy)
+    eventos_proximos = eventos.filter(fecha_evento__date__gt=hoy)
+    eventos_finalizados = eventos.filter(estado='finalizado')
+    
+    # Info de paginación
+    pagination_info = {
+        'showing_start': (page_obj.number - 1) * 4 + 1 if page_obj.object_list else 0,
+        'showing_end': min(page_obj.number * 4, total_eventos),
+        'total_count': total_eventos,
+        'current_page': page_obj.number,
+        'total_pages': paginator.num_pages,
+    }
+    
+    # NUEVO: Manejar peticiones AJAX
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        # Para peticiones AJAX, devolver solo el HTML de la tabla y paginación
+        table_html = render_to_string('eventos/partials/events_table.html', {
+            'eventos': page_obj.object_list,
+            'page_obj': page_obj,
+            'pagination_info': pagination_info,
+            'request': request,
+        })
+        
+        return JsonResponse({
+            'success': True,
+            'table_html': table_html,
+            'pagination_info': pagination_info,
+            'total_eventos': total_eventos,
+        })
+    
+    # Para peticiones normales, renderizar la página completa
+    context = {
+        'eventos': page_obj.object_list,
+        'page_obj': page_obj,
+        'form': form,
+        'total_eventos': total_eventos,
+        'eventos_hoy': eventos_hoy,
+        'eventos_proximos': eventos_proximos,
+        'eventos_finalizados': eventos_finalizados,
+        'pagination_info': pagination_info,
+    }
+    
+    return render(request, 'eventos/lista_eventos.html', context)
+
+
+
+
 
 # Vistas de debug
 @login_required

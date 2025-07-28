@@ -123,7 +123,7 @@ class EventoForm(forms.ModelForm):
 
 
 class FiltroEventosForm(forms.Form):
-    """Formulario para filtrar eventos"""
+    """Formulario para filtrar eventos - CORREGIDO"""
     
     fecha_desde = forms.DateField(
         required=False,
@@ -158,7 +158,8 @@ class FiltroEventosForm(forms.Form):
         label="Estado del evento"
     )
     
-    asistio_gobernador = forms.ChoiceField(
+    # FIX: Cambiar el nombre del campo para evitar confusión
+    asistencia = forms.ChoiceField(
         choices=[
             ('', 'Todos'),
             ('True', 'Asistió el Gobernador'),
@@ -167,6 +168,18 @@ class FiltroEventosForm(forms.Form):
         required=False,
         widget=forms.Select(attrs={'class': 'form-select'}),
         label="Tipo de asistencia"
+    )
+    
+    # NUEVO: Campo separado para tipo de evento
+    tipo_evento = forms.ChoiceField(
+        choices=[
+            ('', 'Todos los tipos'),
+            ('festivo', 'Festivo'),
+            ('regular', 'Regular')
+        ],
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'}),
+        label="Tipo de evento"
     )
     
     buscar = forms.CharField(

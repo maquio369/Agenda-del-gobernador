@@ -1,0 +1,251 @@
+<!-- templates/eventos/partials/events_table.html -->
+<!-- Tabla de Eventos -->
+{% if eventos %}
+<div class="enhanced-table-container fade-in" id="events-table-container">
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-calendar-alt me-2"></i>Evento</th>
+                    <th><i class="fas fa-clock me-2"></i>Fecha y Hora</th>
+                    <th><i class="fas fa-map-marker-alt me-2"></i>Municipio</th>
+                    <th><i class="fas fa-user-tie me-2"></i>Asistencia</th>
+                    <th><i class="fas fa-star me-2"></i>Tipo</th>
+                    <th><i class="fas fa-info-circle me-2"></i>Estado</th>
+                    <th><i class="fas fa-cogs me-2"></i>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evento in eventos %}
+                <tr class="enhanced-event-row {{ evento.estado_evento|lower }}" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#eventModal" 
+                    data-event-id="{{ evento.id }}">
+                    <td>
+                        <div class="event-info">
+                            <h6 class="event-name">{{ evento.nombre|truncatechars:45 }}</h6>
+                            <div class="event-location">
+                                <div class="location-icon">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <span>{{ evento.lugar|truncatechars:35 }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="event-datetime">
+                            <div class="event-date">{{ evento.fecha_evento|date:"d/m/Y" }}</div>
+                            <div class="event-time">
+                                <i class="fas fa-clock"></i>
+                                {{ evento.fecha_evento|date:"H:i" }} hrs
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="enhanced-badge badge-municipio">
+                            <i class="fas fa-city"></i>
+                            {{ evento.municipio.nombre }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if evento.asistio_gobernador %}
+                            <span class="enhanced-badge badge-gobernador">
+                                <i class="fas fa-check-circle"></i>
+                                Gobernador
+                            </span>
+                        {% else %}
+                            <span class="enhanced-badge badge-representante">
+                                <i class="fas fa-user"></i>
+                                Representante
+                            </span>
+                            {% if evento.representante %}
+                                <br><small class="text-muted mt-1">{{ evento.representante|truncatechars:20 }}</small>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if evento.es_festivo %}
+                            <span class="enhanced-badge badge-festivo">
+                                <i class="fas fa-star"></i>
+                                Festivo
+                            </span>
+                        {% else %}
+                            <span class="enhanced-badge badge-regular">
+                                <i class="fas fa-calendar"></i>
+                                Regular
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if evento.estado_evento == "Hoy" %}
+                            <span class="enhanced-badge badge-hoy">
+                                <i class="fas fa-calendar-day"></i>
+                                HOY
+                            </span>
+                        {% elif evento.estado_evento == "Próximo" %}
+                            <span class="enhanced-badge badge-proximo">
+                                <i class="fas fa-calendar-week"></i>
+                                PRÓXIMO
+                            </span>
+                        {% else %}
+                            <span class="enhanced-badge badge-pasado">
+                                <i class="fas fa-calendar-check"></i>
+                                PASADO
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="{% url 'detalle_evento' evento.pk %}" 
+                               class="btn-action view"
+                               onclick="event.stopPropagation()"
+                               title="Ver detalles">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'editar_evento' evento.pk %}" 
+                               class="btn-action edit"
+                               onclick="event.stopPropagation()"
+                               title="Editar evento">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Paginación -->
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="enhanced-pagination fade-in" id="pagination-container">
+    <div class="pagination-header">
+        <div class="pagination-info">
+            <i class="fas fa-info-circle"></i>
+            Mostrando 
+            <span class="pagination-numbers">{{ pagination_info.showing_start }}</span>
+            -
+            <span class="pagination-numbers">{{ pagination_info.showing_end }}</span>
+            de
+            <span class="pagination-numbers">{{ pagination_info.total_count }}</span>
+            eventos totales
+        </div>
+        
+        <div class="pagination-info">
+            <i class="fas fa-bookmark"></i>
+            Página 
+            <span class="pagination-numbers">{{ pagination_info.current_page }}</span>
+            de
+            <span class="pagination-numbers">{{ pagination_info.total_pages }}</span>
+        </div>
+    </div>
+    
+    <ul class="pagination-nav">
+        <!-- Primera página -->
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" title="Primera página" data-page="1">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-double-left"></i>
+                </span>
+            </li>
+        {% endif %}
+        
+        <!-- Página anterior -->
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" title="Página anterior" data-page="{{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                    Anterior
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-left"></i>
+                    Anterior
+                </span>
+            </li>
+        {% endif %}
+        
+        <!-- Páginas numeradas -->
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link">{{ num }}</span>
+                </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" data-page="{{ num }}">{{ num }}</a>
+                </li>
+            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" data-page="{{ num }}">{{ num }}</a>
+                </li>
+            {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
+                <li class="page-item disabled">
+                    <span class="pagination-separator">...</span>
+                </li>
+            {% endif %}
+        {% endfor %}
+        
+        <!-- Página siguiente -->
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" title="Página siguiente" data-page="{{ page_obj.next_page_number }}">
+                    Siguiente
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Siguiente
+                    <i class="fas fa-angle-right"></i>
+                </span>
+            </li>
+        {% endif %}
+        
+        <!-- Última página -->
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}" title="Última página" data-page="{{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+        {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">
+                    <i class="fas fa-angle-double-right"></i>
+                </span>
+            </li>
+        {% endif %}
+    </ul>
+</div>
+{% endif %}
+
+{% else %}
+<!-- Estado Vacío -->
+<div class="enhanced-empty-state fade-in">
+    <div class="empty-content">
+        <div class="empty-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <h3 class="empty-title">No se encontraron eventos</h3>
+        <p class="empty-subtitle">
+            No hay eventos que coincidan con los filtros de búsqueda aplicados.<br>
+            Intenta modificar los criterios de búsqueda o crear un nuevo evento.
+        </p>
+        <a href="{% url 'crear_evento' %}" class="btn-new-event">
+            <i class="fas fa-plus"></i>
+            Crear Primer Evento
+        </a>
+    </div>
+</div>
+{% endif %}
