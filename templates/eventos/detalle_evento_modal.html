@@ -1,130 +1,363 @@
 {% load fecha_filters %}
 
-<div class="row">
-    <div class="col-md-8">
-        <h4 class="text-primary mb-3">{{ evento.nombre }}</h4>
-        
-        <!-- Información básica -->
-        <div class="row mb-3">
-            <div class="col-sm-6">
-                <strong><i class="fas fa-calendar me-1"></i> Fecha:</strong><br>
-                <span class="text-muted">{{ evento.fecha_evento|fecha_espanol }}</span>
-            </div>
-            <div class="col-sm-6">
-                <strong><i class="fas fa-clock me-1"></i> Hora:</strong><br>
-                <span class="text-muted">{{ evento.fecha_evento|date:"H:i" }} hrs</span>
-            </div>
+<style>
+.modal-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    border: none;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.info-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    margin: 0;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.info-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.info-content h6 {
+    margin: 0 0 0.25rem 0;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.info-content p {
+    margin: 0;
+    color: #6c757d;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.badge-custom {
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.badge-success-custom {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.badge-warning-custom {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+}
+
+.badge-festivo-custom {
+    background: linear-gradient(135deg, #17a2b8, #138496);
+    color: white;
+}
+
+.badge-regular-custom {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.description-card {
+    background: white;
+    border-radius: 12px;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-top: 1.5rem;
+}
+
+.description-header {
+    background: #f8f9fa;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 12px 12px 0 0;
+}
+
+.description-content {
+    padding: 1.5rem;
+}
+
+.action-buttons-container {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 0 0 12px 12px;
+    border-top: 1px solid #e9ecef;
+    margin-top: 1.5rem;
+}
+
+.btn-action-modal {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    margin-right: 0.75rem;
+}
+
+.btn-edit-modal {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    color: #212529;
+}
+
+.btn-edit-modal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+    color: #212529;
+    text-decoration: none;
+}
+
+.btn-back-modal {
+    background: linear-gradient(135deg, #6c757d, #495057);
+    color: white;
+}
+
+.btn-back-modal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-close-modal {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.btn-close-modal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .btn-action-modal {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+        margin-right: 0;
+    }
+}
+</style>
+
+<div class="container-fluid">
+    <!-- Información Principal -->
+    <div class="modal-info-card">
+        <div class="info-header">
+            <h5 class="mb-0">
+                <i class="fas fa-calendar-alt me-2"></i>
+                {{ evento.nombre }}
+            </h5>
         </div>
         
-        <div class="row mb-3">
-            <div class="col-sm-6">
-                <strong><i class="fas fa-map-marker-alt me-1"></i> Municipio:</strong><br>
-                <span class="text-muted">{{ evento.municipio.nombre }}</span>
+        <div class="info-grid">
+            <!-- Fecha -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-calendar"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Fecha</h6>
+                    <p>{{ evento.fecha_evento|fecha_espanol }}</p>
+                </div>
             </div>
-            <div class="col-sm-6">
-                <strong><i class="fas fa-building me-1"></i> Lugar:</strong><br>
-                <span class="text-muted">{{ evento.lugar }}</span>
+            
+            <!-- Hora -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Hora</h6>
+                    <p>{{ evento.fecha_evento|date:"H:i" }} hrs</p>
+                </div>
+            </div>
+            
+            <!-- Municipio -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Municipio</h6>
+                    <p>{{ evento.municipio.nombre }}</p>
+                </div>
+            </div>
+            
+            <!-- Lugar -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Lugar del evento</h6>
+                    <p>{{ evento.lugar }}</p>
+                </div>
+            </div>
+            
+            <!-- Responsable -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Responsable</h6>
+                    <p>{{ evento.responsable }}</p>
+                </div>
+            </div>
+            
+            <!-- Tipo -->
+            <div class="info-item">
+                <div class="info-icon">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="info-content">
+                    <h6>Tipo de evento</h6>
+                    <p>
+                        {% if evento.es_festivo %}
+                            <span class="badge-custom badge-festivo-custom">
+                                <i class="fas fa-star"></i>
+                                Evento Festivo
+                            </span>
+                        {% else %}
+                            <span class="badge-custom badge-regular-custom">
+                                <i class="fas fa-calendar"></i>
+                                Evento Regular
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
             </div>
         </div>
-        
-        <div class="row mb-3">
-            <div class="col-sm-6">
-                <strong><i class="fas fa-user me-1"></i> Responsable:</strong><br>
-                <span class="text-muted">{{ evento.responsable }}</span>
-            </div>
-            <div class="col-sm-6">
-                <strong><i class="fas fa-star me-1"></i> Tipo:</strong><br>
-                {% if evento.es_festivo %}
-                    <span class="badge bg-warning text-dark">Festivo</span>
-                {% else %}
-                    <span class="badge bg-info">Regular</span>
-                {% endif %}
-            </div>
+    </div>
+
+    <!-- Asistencia -->
+    <div class="modal-info-card">
+        <div class="info-header">
+            <h6 class="mb-0">
+                <i class="fas fa-user-check me-2"></i>
+                Información de Asistencia
+            </h6>
         </div>
         
-        <!-- Asistencia -->
-        <div class="mb-3">
-            <strong><i class="fas fa-user-check me-1"></i> Asistencia:</strong><br>
-            {% if evento.asistio_gobernador %}
-                <span class="badge bg-success">
-                    <i class="fas fa-check me-1"></i>Asistió el Gobernador
-                </span>
-            {% else %}
-                <span class="badge bg-warning text-dark">
-                    <i class="fas fa-user-friends me-1"></i>Representante: {{ evento.representante }}
-                </span>
+        <div style="padding: 1.5rem;">
+            <div class="info-item">
+                <div class="info-icon">
+                    {% if evento.asistio_gobernador %}
+                        <i class="fas fa-user-tie"></i>
+                    {% else %}
+                        <i class="fas fa-user-friends"></i>
+                    {% endif %}
+                </div>
+                <div class="info-content">
+                    <h6>
+                        {% if evento.asistio_gobernador %}
+                            Asistencia del Gobernador
+                        {% else %}
+                            Asistencia de Representante
+                        {% endif %}
+                    </h6>
+                    <p>
+                        {% if evento.asistio_gobernador %}
+                            <span class="badge-custom badge-success-custom">
+                                <i class="fas fa-check-circle"></i>
+                                Confirmada la asistencia del Gobernador
+                            </span>
+                        {% else %}
+                            <span class="badge-custom badge-warning-custom">
+                                <i class="fas fa-user-friends"></i>
+                                Representante: {{ evento.representante|default:"Por designar" }}
+                            </span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Descripción y Observaciones -->
+    {% if evento.descripcion or evento.observaciones %}
+    <div class="description-card">
+        <div class="description-header">
+            <h6 class="mb-0">
+                <i class="fas fa-align-left me-2"></i>
+                Información Adicional
+            </h6>
+        </div>
+        
+        <div class="description-content">
+            {% if evento.descripcion %}
+            <div class="mb-3">
+                <h6 class="text-primary">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Descripción del evento
+                </h6>
+                <p class="text-muted mb-0">{{ evento.descripcion|linebreaks }}</p>
+            </div>
+            {% endif %}
+            
+            {% if evento.observaciones %}
+            <div>
+                <h6 class="text-info">
+                    <i class="fas fa-sticky-note me-2"></i>
+                    Observaciones importantes
+                </h6>
+                <p class="text-muted mb-0">{{ evento.observaciones|linebreaks }}</p>
+            </div>
             {% endif %}
         </div>
-        
-        <!-- Descripción -->
-        {% if evento.descripcion %}
-        <div class="mb-3">
-            <strong><i class="fas fa-align-left me-1"></i> Descripción:</strong><br>
-            <p class="text-muted">{{ evento.descripcion|linebreaks }}</p>
-        </div>
-        {% endif %}
-        
-        <!-- Observaciones -->
-        {% if evento.observaciones %}
-        <div class="mb-3">
-            <strong><i class="fas fa-sticky-note me-1"></i> Observaciones:</strong><br>
-            <p class="text-muted">{{ evento.observaciones|linebreaks }}</p>
-        </div>
-        {% endif %}
     </div>
-    
-    <div class="col-md-4">
-        <!-- Estado del evento -->
-        <div class="card bg-light mb-3">
-            <div class="card-body text-center">
-                <h6 class="card-title">Estado del Evento</h6>
-                {% if evento.estado_evento == "Hoy" %}
-                    <i class="fas fa-calendar-day fa-3x text-success mb-2"></i>
-                    <p class="text-success fw-bold">HOY</p>
-                {% elif evento.estado_evento == "Próximo" %}
-                    <i class="fas fa-calendar-week fa-3x text-info mb-2"></i>
-                    <p class="text-info fw-bold">PRÓXIMO</p>
-                {% else %}
-                    <i class="fas fa-calendar-check fa-3x text-muted mb-2"></i>
-                    <p class="text-muted fw-bold">PASADO</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <!-- Información adicional -->
-        <div class="card bg-light">
-            <div class="card-body">
-                <h6 class="card-title">
-                    <i class="fas fa-info-circle me-1"></i>Información
-                </h6>
-                <small class="text-muted">
-                    <strong>Creado por:</strong> {{ evento.creado_por.get_full_name|default:evento.creado_por.username }}<br>
-                    <strong>Fecha de creación:</strong> {{ evento.fecha_creacion|date:"d/m/Y H:i" }}<br>
-                    {% if evento.fecha_actualizacion != evento.fecha_creacion %}
-                    <strong>Última actualización:</strong> {{ evento.fecha_actualizacion|date:"d/m/Y H:i" }}
-                    {% endif %}
-                </small>
-            </div>
-        </div>
-    </div>
-</div>
+    {% endif %}
 
-<!-- Botones de acción -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="d-flex justify-content-between">
-            <div>
-                <a href="{% url 'editar_evento' evento.pk %}" class="btn btn-warning me-2">
-                    <i class="fas fa-edit me-1"></i>Editar Evento
+    <!-- Botones de Acción -->
+    <div class="action-buttons-container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex flex-wrap">
+                <a href="{% url 'editar_evento' evento.pk %}" class="btn-action-modal btn-edit-modal">
+                    <i class="fas fa-edit"></i>
+                    Editar Evento
                 </a>
-                <a href="{% url 'lista_eventos' %}" class="btn btn-outline-primary">
-                    <i class="fas fa-list me-1"></i>Ver Todos los Eventos
-                </a>
-            </div></a>
             </div>
             <div>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i>Cerrar
+                <button type="button" class="btn-action-modal btn-close-modal" onclick="closeEventModal()">
+                    <i class="fas fa-times"></i>
+                    Cerrar
                 </button>
             </div>
         </div>

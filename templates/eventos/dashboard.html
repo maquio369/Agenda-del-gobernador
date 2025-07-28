@@ -14,6 +14,8 @@
     --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --gradient-beige: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
     --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+    --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+    --border-radius: 16px;
 }
 
 .dashboard-container {
@@ -510,7 +512,9 @@
                 <div class="row">
                     {% for evento in eventos_en_curso %}
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <div class="event-card en-curso">
+                        <div class="event-card en-curso" 
+                             onclick="loadEventModal({{ evento.id }})"
+                             data-event-id="{{ evento.id }}">
                             <div class="card-body">
                                 <h3 class="event-title">{{ evento.nombre }}</h3>
                                 <div class="event-meta">
@@ -582,7 +586,9 @@
                 <div class="row">
                     {% for evento in eventos_hoy_proximos %}
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <div class="event-card hoy">
+                        <div class="event-card hoy" 
+                             onclick="loadEventModal({{ evento.id }})"
+                             data-event-id="{{ evento.id }}">
                             <div class="card-body">
                                 <h3 class="event-title">{{ evento.nombre }}</h3>
                                 <div class="event-meta">
@@ -656,7 +662,9 @@
                 <div class="row">
                     {% for evento in eventos_hoy_finalizados %}
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <div class="event-card finalizado">
+                        <div class="event-card finalizado" 
+                             onclick="loadEventModal({{ evento.id }})"
+                             data-event-id="{{ evento.id }}">
                             <div class="card-body">
                                 <h3 class="event-title">{{ evento.nombre }}</h3>
                                 <div class="event-meta">
@@ -731,7 +739,9 @@
                 <div class="row">
                     {% for evento in eventos_proximos %}
                     <div class="col-lg-4 col-md-6 mb-3">
-                        <div class="event-card proximo">
+                        <div class="event-card proximo" 
+                             onclick="loadEventModal({{ evento.id }})"
+                             data-event-id="{{ evento.id }}">
                             <div class="card-body">
                                 <h3 class="event-title">{{ evento.nombre }}</h3>
                                 <div class="event-meta">
@@ -824,6 +834,30 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modal para detalles del evento -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="border-radius: var(--border-radius); border: none; box-shadow: var(--shadow-hover);">
+            <div class="modal-header" style="background: var(--gradient-primary); color: white; border-radius: var(--border-radius) var(--border-radius) 0 0; padding: 1.5rem;">
+                <h5 class="modal-title" id="eventModalLabel" style="font-weight: 600;">
+                    <i class="fas fa-calendar-alt me-2"></i>
+                    Detalles del Evento
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1); opacity: 0.8;"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody" style="padding: 2rem;">
+                <!-- Contenido cargado via AJAX -->
+                <div class="text-center py-4">
+                    <div class="spinner-border" style="color: var(--pantone-teal);" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Cargando detalles del evento...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -840,6 +874,83 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Función para cargar el modal de detalles del evento
+function loadEventModal(eventId) {
+    const modalElement = document.getElementById('eventModal');
+    const modal = new bootstrap.Modal(modalElement);
+    const modalBody = document.getElementById('eventModalBody');
+    
+    // Limpiar cualquier modal anterior
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Mostrar loading en modal
+    modalBody.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border" style="color: var(--pantone-teal);" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando detalles del evento...</p>
+        </div>
+    `;
+    
+    // Mostrar el modal
+    modal.show();
+    
+    // Agregar listener para limpiar al cerrar
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        modalBody.innerHTML = '';
+    }, { once: true });
+    
+    // Cargar contenido via AJAX
+    fetch(`/eventos/detalle/${eventId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            modalBody.innerHTML = `
+                <div class="alert alert-danger" style="border-radius: 12px; border: none; background: linear-gradient(135deg, #dc3545, #c82333); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h6 class="mb-1">Error al cargar</h6>
+                            <small>Error: ${error.message}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+}
+
+function closeEventModal() {
+    const modalElement = document.getElementById('eventModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    
+    if (modal) {
+        modal.hide();
+    }
+    
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 300);
+}
 
 // Función para finalizar evento manualmente
 function finalizarEvento(eventoId, event) {

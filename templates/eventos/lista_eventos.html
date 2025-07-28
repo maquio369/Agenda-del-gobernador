@@ -1186,5 +1186,103 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+
+
+
+// Función para cargar el modal de detalles del evento
+function loadEventModal(eventId) {
+    console.log('loadEventModal llamada con ID:', eventId); // DEBUG
+    
+    const modalElement = document.getElementById('eventModal');
+    const modal = new bootstrap.Modal(modalElement);
+    const modalBody = document.getElementById('eventModalBody');
+    
+    // Limpiar cualquier modal anterior
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Mostrar loading en modal
+    modalBody.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border" style="color: var(--pantone-teal);" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando detalles del evento...</p>
+        </div>
+    `;
+    
+    // Mostrar el modal
+    modal.show();
+    
+    // Agregar listener para limpiar al cerrar
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        // Forzar limpieza completa
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        
+        // Limpiar contenido
+        modalBody.innerHTML = '';
+    }, { once: true });
+    
+    // URL que vamos a llamar
+    const url = `/eventos/detalle/${eventId}/`;
+    console.log('Haciendo fetch a:', url); // DEBUG
+    
+    // Cargar contenido via AJAX
+    fetch(url)
+        .then(response => {
+            console.log('Respuesta recibida:', response.status, response.statusText); // DEBUG
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            console.log('HTML recibido:', html.substring(0, 100) + '...'); // DEBUG
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error completo:', error); // DEBUG
+            modalBody.innerHTML = `
+                <div class="alert alert-danger" style="border-radius: 12px; border: none; background: linear-gradient(135deg, #dc3545, #c82333); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h6 class="mb-1">Error al cargar</h6>
+                            <small>Error: ${error.message}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+}
+
+// Función para cerrar modal forzadamente (útil para el botón cerrar)
+function closeEventModal() {
+    const modalElement = document.getElementById('eventModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    
+    if (modal) {
+        modal.hide();
+    }
+    
+    // Forzar limpieza después de un momento
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 300);
+}
+
+
+
 </script>
+
+
 {% endblock %}

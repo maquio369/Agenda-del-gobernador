@@ -242,13 +242,15 @@ def editar_evento(request, pk):
     })
 
 # Vista para detalle de evento
+# Vista para detalle de evento (versión modal)
 @login_required
 def detalle_evento(request, pk):
-    """Muestra el detalle completo de un evento"""
+    """Muestra el detalle completo de un evento para modal"""
     evento = get_object_or_404(Evento, pk=pk)
     evento.actualizar_estado_automatico()
     
-    return render(request, 'eventos/detalle_evento.html', {'evento': evento})
+    # Siempre usar el template del modal
+    return render(request, 'eventos/detalle_evento_modal.html', {'evento': evento})
 
 # Vista para lista de eventos
 @login_required
@@ -585,33 +587,54 @@ def estadisticas(request):
     eventos_representante = Evento.objects.filter(asistio_gobernador=False).count()
     eventos_festivos = Evento.objects.filter(es_festivo=True).count()
     
+    # Calcular porcentajes
+    porcentaje_gobernador = round((eventos_gobernador / total_eventos * 100), 1) if total_eventos > 0 else 0
+    porcentaje_representante = round((eventos_representante / total_eventos * 100), 1) if total_eventos > 0 else 0
+    porcentaje_festivos = round((eventos_festivos / total_eventos * 100), 1) if total_eventos > 0 else 0
+    
     # Eventos por estado
     eventos_por_estado = Evento.objects.values('estado').annotate(
         total=Count('id')
     ).order_by('-total')
     
-    # Eventos por municipio (top 10)
-    eventos_por_municipio = Evento.objects.values(
-        'municipio__nombre'
-    ).annotate(
+    # Eventos por municipio (top 10 para gráfica de donut)
+    eventos_por_municipio = Evento.objects.values('municipio__nombre').annotate(
         total=Count('id')
     ).order_by('-total')[:10]
     
-    # Eventos por mes
-    eventos_por_mes = Evento.objects.annotate(
-        mes=TruncMonth('fecha_evento')
-    ).values('mes').annotate(
-        total=Count('id')
-    ).order_by('mes')
+    # Datos para gráfica de municipios (Doughnut)
+    municipios_data = {
+        'labels': [item['municipio__nombre'] for item in eventos_por_municipio],
+        'data': [item['total'] for item in eventos_por_municipio]
+    }
+    
+    # MEJORADO: Datos para gráfico de asistencia por municipio (Top 20 con mejor información)
+    asistencia_por_municipio = Evento.objects.values('municipio__nombre').annotate(
+        total_gobernador=Count('id', filter=Q(asistio_gobernador=True)),
+        total_representante=Count('id', filter=Q(asistio_gobernador=False)),
+        total_eventos=Count('id')
+    ).filter(total_eventos__gt=0).order_by('-total_eventos')[:20]
+    
+    # Preparar datos mejorados para la gráfica de barras
+    asistencia_data = {
+        'labels': [item['municipio__nombre'] for item in asistencia_por_municipio],
+        'gobernador': [item['total_gobernador'] for item in asistencia_por_municipio],
+        'representante': [item['total_representante'] for item in asistencia_por_municipio],
+        'totales': [item['total_eventos'] for item in asistencia_por_municipio]
+    }
     
     context = {
         'total_eventos': total_eventos,
         'eventos_gobernador': eventos_gobernador,
         'eventos_representante': eventos_representante,
         'eventos_festivos': eventos_festivos,
+        'porcentaje_gobernador': porcentaje_gobernador,
+        'porcentaje_representante': porcentaje_representante,
+        'porcentaje_festivos': porcentaje_festivos,
         'eventos_por_estado': eventos_por_estado,
         'eventos_por_municipio': eventos_por_municipio,
-        'eventos_por_mes': eventos_por_mes,
+        'municipios_data': json.dumps(municipios_data),
+        'asistencia_data': json.dumps(asistencia_data),
     }
     
-    return render(request, 'eventos/estadisticas.html', context)
+    return render(request, 'estadisticas/estadisticas.html', context)

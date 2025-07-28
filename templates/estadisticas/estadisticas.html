@@ -30,6 +30,12 @@
         margin: 20px 0;
     }
     
+    .chart-container-large {
+        position: relative;
+        height: 600px;
+        margin: 20px 0;
+    }
+    
     .chart-card {
         background: white;
         border-radius: 15px;
@@ -53,25 +59,22 @@
         font-weight: bold;
         margin-bottom: 0.5rem;
     }
+    
+    .improvement-badge {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: bold;
+        margin-top: 1rem;
+        display: inline-block;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid">
-    <!-- Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="stats-header">
-                <div class="card-body p-4">
-                    <h2 class="mb-3">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        Estadísticas y Análisis
-                    </h2>
-                    <p class="mb-0">Análisis detallado de los eventos del Gobernador</p>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Métricas principales -->
     <div class="row mb-4">
@@ -132,7 +135,7 @@
         </div>
     </div>
 
-    <!-- Gráficas -->
+    <!-- Gráficas principales -->
     <div class="row mb-4">
         <!-- Eventos por Municipio -->
         <div class="col-lg-6 mb-4">
@@ -165,54 +168,24 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <!-- Eventos por Mes -->
-        <div class="col-lg-8 mb-4">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-calendar me-2"></i>
-                        Eventos por Mes (Último Año)
-                    </h5>
-                </div>
-                <div class="chart-container p-3">
-                    <canvas id="mesesChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top municipios con detalle -->
-        <div class="col-lg-4 mb-4">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-trophy me-2"></i>
-                        Ranking de Municipios
-                    </h5>
-                </div>
-                <div class="card-body">
-                    {% for municipio in top_municipios|slice:":5" %}
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold">{{ forloop.counter }}. {{ municipio.municipio__nombre }}</span>
-                        <span class="badge bg-primary">{{ municipio.total }} eventos</span>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Asistencia por municipio -->
+    <!-- Gráfica principal mejorada -->
     <div class="row">
         <div class="col-12">
             <div class="chart-card">
-                <div class="chart-header">
-                    <h5 class="mb-0">
-                        <i class="fas fa-chart-bar me-2"></i>
-                        Asistencia por Municipio (Top 15)
-                    </h5>
+                <div class="chart-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-bar me-2"></i>
+                            Análisis de Asistencia por Municipio (Top 20)
+                        </h5>
+                        <small class="text-muted">Comparación detallada de asistencia del Gobernador vs Representante por municipio</small>
+                    </div>
+                    <div class="improvement-badge">
+                        <i class="fas fa-trophy me-1"></i>
+                        Análisis Mejorado
+                    </div>
                 </div>
-                <div class="chart-container p-3" style="height: 500px;">
+                <div class="chart-container-large p-4">
                     <canvas id="asistenciaMunicipioChart"></canvas>
                 </div>
             </div>
@@ -228,16 +201,20 @@
 <script>
 // Datos desde Django
 const municipiosData = {{ municipios_data|safe }};
-const mesesData = {{ meses_data|safe }};
 const asistenciaData = {{ asistencia_data|safe }};
 
-// Configuración de colores
+// Configuración de colores mejorada
 const colors = {
     primary: '#667eea',
     success: '#28a745',
     warning: '#ffc107',
     info: '#17a2b8',
-    danger: '#dc3545'
+    danger: '#dc3545',
+    purple: '#6f42c1',
+    orange: '#fd7e14',
+    teal: '#20c997',
+    pink: '#e83e8c',
+    gray: '#6c757d'
 };
 
 // Gráfica de Municipios (Doughnut)
@@ -250,10 +227,11 @@ new Chart(municipiosCtx, {
             data: municipiosData.data,
             backgroundColor: [
                 colors.primary, colors.success, colors.warning, colors.info, colors.danger,
-                '#6f42c1', '#fd7e14', '#20c997', '#e83e8c', '#6c757d'
+                colors.purple, colors.orange, colors.teal, colors.pink, colors.gray
             ],
             borderWidth: 2,
-            borderColor: '#fff'
+            borderColor: '#fff',
+            hoverBorderWidth: 3
         }]
     },
     options: {
@@ -261,7 +239,25 @@ new Chart(municipiosCtx, {
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'bottom'
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} eventos (${percentage}%)`;
+                    }
+                }
             }
         }
     }
@@ -276,8 +272,9 @@ new Chart(asistenciaCtx, {
         datasets: [{
             data: [{{ eventos_gobernador }}, {{ eventos_representante }}],
             backgroundColor: [colors.success, colors.warning],
-            borderWidth: 2,
-            borderColor: '#fff'
+            borderWidth: 3,
+            borderColor: '#fff',
+            hoverBorderWidth: 4
         }]
     },
     options: {
@@ -285,48 +282,31 @@ new Chart(asistenciaCtx, {
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                position: 'bottom'
-            }
-        }
-    }
-});
-
-// Gráfica de Eventos por Mes (Line)
-const mesesCtx = document.getElementById('mesesChart').getContext('2d');
-new Chart(mesesCtx, {
-    type: 'line',
-    data: {
-        labels: mesesData.labels,
-        datasets: [{
-            label: 'Eventos por Mes',
-            data: mesesData.data,
-            borderColor: colors.primary,
-            backgroundColor: colors.primary + '20',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    stepSize: 1
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    font: {
+                        size: 14
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = {{ total_eventos }};
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ${value} eventos (${percentage}%)`;
+                    }
                 }
             }
-        },
-        plugins: {
-            legend: {
-                display: false
-            }
         }
     }
 });
 
-// Gráfica de Asistencia por Municipio (Bar)
+// MEJORADA: Gráfica de Asistencia por Municipio (Barras horizontales)
 const asistenciaMunicipioCtx = document.getElementById('asistenciaMunicipioChart').getContext('2d');
 new Chart(asistenciaMunicipioCtx, {
     type: 'bar',
@@ -338,35 +318,93 @@ new Chart(asistenciaMunicipioCtx, {
                 data: asistenciaData.gobernador,
                 backgroundColor: colors.success,
                 borderColor: colors.success,
-                borderWidth: 1
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false,
             },
             {
                 label: 'Asistió Representante',
                 data: asistenciaData.representante,
                 backgroundColor: colors.warning,
                 borderColor: colors.warning,
-                borderWidth: 1
+                borderWidth: 1,
+                borderRadius: 4,
+                borderSkipped: false,
             }
         ]
     },
     options: {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
+        interaction: {
+            intersect: false,
+        },
         scales: {
             x: {
-                stacked: true
+                stacked: true,
+                beginAtZero: true,
+                grid: {
+                    color: '#e9ecef'
+                },
+                ticks: {
+                    stepSize: 1,
+                    font: {
+                        size: 12
+                    }
+                }
             },
             y: {
                 stacked: true,
-                beginAtZero: true,
+                grid: {
+                    display: false
+                },
                 ticks: {
-                    stepSize: 1
+                    font: {
+                        size: 11
+                    },
+                    maxRotation: 0
                 }
             }
         },
         plugins: {
             legend: {
-                position: 'top'
+                position: 'top',
+                align: 'center',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                }
+            },
+            tooltip: {
+                mode: 'index',
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: '#667eea',
+                borderWidth: 1,
+                callbacks: {
+                    title: function(context) {
+                        return `Municipio: ${context[0].label}`;
+                    },
+                    afterBody: function(context) {
+                        const municipioIndex = context[0].dataIndex;
+                        const total = asistenciaData.totales[municipioIndex];
+                        return `Total eventos: ${total}`;
+                    }
+                }
+            }
+        },
+        layout: {
+            padding: {
+                top: 20,
+                right: 20,
+                bottom: 20,
+                left: 20
             }
         }
     }
