@@ -70,6 +70,25 @@ body {
     font-size: 1rem;
 }
 
+/* Botón toggle para mostrar/ocultar filtros */
+.filter-toggle {
+    background: transparent;
+    border: 2px solid var(--pantone-teal);
+    color: var(--pantone-teal);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-toggle:hover {
+    background: var(--pantone-teal);
+    color: white;
+}
+
 .filter-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -483,7 +502,7 @@ body {
 {% block content %}
 <div class="dashboard-container">
     <div class="container-fluid">
-        <!-- Filtros Mejorados -->
+        <!-- Filtros Mejorados con Toggle -->
         <div class="enhanced-filters fade-in">
             <div class="filters-header">
                 <h2 class="section-title">
@@ -492,9 +511,13 @@ body {
                     </div>
                     Configuración del Reporte
                 </h2>
+                <button class="filter-toggle" type="button" onclick="toggleFilters()">
+                    <i class="fas fa-eye" id="filter-toggle-icon"></i>
+                    <span id="filter-toggle-text">Mostrar Filtros</span>
+                </button>
             </div>
             
-            <form method="get" id="filtroForm">
+            <form method="get" id="filter-form" style="display: none;">
                 <div class="filter-grid">
                     <div class="filter-group">
                         <label class="filter-label">
@@ -542,7 +565,6 @@ body {
                             {{ form.buscar.label }}
                         </label>
                         <div style="position: relative;">
-                            <i class="fas fa-search search-icon"></i>
                             {{ form.buscar }}
                         </div>
                     </div>
@@ -664,29 +686,32 @@ body {
 
 {% block extra_js %}
 <script>
-function generarExcel() {
-    // Mostrar loading en el botón
-    const btn = event.target.closest('.btn-download');
-    const originalContent = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
-    btn.disabled = true;
+// Función para mostrar/ocultar filtros (igual que en lista_eventos)
+window.toggleFilters = function() {
+    const form = document.getElementById('filter-form');
+    const icon = document.getElementById('filter-toggle-icon');
+    const text = document.getElementById('filter-toggle-text');
     
-    // Obtener parámetros actuales
-    const params = new URLSearchParams(window.location.search);
-    
-    // Crear enlace y descargar
-    const downloadUrl = '/reportes/excel/?' + params.toString();
-    window.open(downloadUrl, '_blank');
-    
-    // Restaurar botón después de un delay
-    setTimeout(() => {
-        btn.innerHTML = originalContent;
-        btn.disabled = false;
-    }, 2000);
-}
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        form.style.animation = 'fadeInUp 0.3s ease-out';
+        icon.className = 'fas fa-eye-slash';
+        text.textContent = 'Ocultar Filtros';
+    } else {
+        form.style.display = 'none';
+        icon.className = 'fas fa-eye';
+        text.textContent = 'Mostrar Filtros';
+    }
+};
 
-// Animaciones de aparición
+// Auto-mostrar filtros si hay filtros aplicados
 document.addEventListener('DOMContentLoaded', function() {
+    const hasFilters = {% if request.GET.fecha_desde or request.GET.fecha_hasta or request.GET.municipio or request.GET.asistencia or request.GET.tipo_evento or request.GET.buscar %}true{% else %}false{% endif %};
+    if (hasFilters) {
+        toggleFilters();
+    }
+    
+    // Animaciones de aparición
     const observerOptions = {
         threshold: 0.1,
         rootMargin: '0px 0px -50px 0px'
@@ -720,5 +745,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+function generarExcel() {
+    // Mostrar loading en el botón
+    const btn = event.target.closest('.btn-download');
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...';
+    btn.disabled = true;
+    
+    // Obtener parámetros actuales
+    const params = new URLSearchParams(window.location.search);
+    
+    // Crear enlace y descargar
+    const downloadUrl = '/reportes/excel/?' + params.toString();
+    window.open(downloadUrl, '_blank');
+    
+    // Restaurar botón después de un delay
+    setTimeout(() => {
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+    }, 2000);
+}
 </script>
 {% endblock %}

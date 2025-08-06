@@ -220,26 +220,56 @@ def actualizar_estados_eventos(request):
     return redirect('dashboard')
 
 # Vista para editar eventos
+# eventos/views.py - Vista corregida para editar_evento
+
+# Reemplaza la función editar_evento existente en eventos/views.py con esta versión:
+
 @login_required
 def editar_evento(request, pk):
     """Formulario para editar eventos existentes"""
     evento = get_object_or_404(Evento, pk=pk)
+    
+    # Detectar de dónde viene el usuario
+    referrer = request.META.get('HTTP_REFERER', '')
+    viene_de_lista = 'lista' in referrer or 'eventos' in referrer
+    viene_de_dashboard = 'dashboard' in referrer or referrer.endswith('/')
     
     if request.method == 'POST':
         form = EventoForm(request.POST, instance=evento)
         if form.is_valid():
             form.save()
             messages.success(request, f'Evento "{evento.nombre}" actualizado exitosamente.')
-            return redirect('detalle_evento', pk=evento.pk)
+            
+            # Mejorar la redirección basada en el contexto
+            next_url = request.POST.get('next') or request.GET.get('next')
+            
+            if next_url:
+                # Si hay una URL específica de retorno
+                return redirect(next_url)
+            elif viene_de_lista:
+                # Si viene de la lista de eventos, regresar allí
+                return redirect('lista_eventos')
+            elif viene_de_dashboard:
+                # Si viene del dashboard, regresar allí
+                return redirect('dashboard') 
+            else:
+                # Por defecto, ir al dashboard
+                return redirect('dashboard')
         else:
             messages.error(request, 'Por favor corrija los errores en el formulario.')
     else:
         form = EventoForm(instance=evento)
     
-    return render(request, 'eventos/editar_evento.html', {
+    # Determinar URLs de retorno para el template
+    context = {
         'form': form,
-        'evento': evento
-    })
+        'evento': evento,
+        'viene_de_lista': viene_de_lista,
+        'viene_de_dashboard': viene_de_dashboard,
+        'next_url': request.GET.get('next', ''),
+    }
+    
+    return render(request, 'eventos/editar_evento.html', context)
 
 # Vista para detalle de evento
 # Vista para detalle de evento (versión modal)
@@ -638,3 +668,6 @@ def estadisticas(request):
     }
     
     return render(request, 'estadisticas/estadisticas.html', context)
+
+
+    

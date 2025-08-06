@@ -6,6 +6,8 @@ from .models import Evento, Municipio
 import pytz
 from datetime import datetime
 
+# eventos/forms.py - Reemplaza la clase EventoForm con esta versión corregida
+
 class EventoForm(forms.ModelForm):
     """Formulario para crear y editar eventos"""
     
@@ -18,7 +20,11 @@ class EventoForm(forms.ModelForm):
         ]
         widgets = {
             'fecha_evento': forms.DateTimeInput(
-                attrs={'type': 'datetime-local', 'class': 'form-control'}
+                attrs={
+                    'type': 'datetime-local', 
+                    'class': 'form-control',
+                    'step': '300'  # Pasos de 5 minutos
+                }
             ),
             'nombre': forms.TextInput(
                 attrs={'class': 'form-control', 'placeholder': 'Nombre del evento'}
@@ -70,12 +76,19 @@ class EventoForm(forms.ModelForm):
         self.fields['fecha_evento'].help_text = "Seleccione la fecha y hora exacta del evento"
         self.fields['es_festivo'].help_text = "Marque si es una celebración o evento festivo"
         self.fields['representante'].help_text = "Solo complete si el Gobernador no asistió"
+        
+        # SOLUCIÓN PARA EL PROBLEMA: Convertir fecha a timezone de México para mostrar
+        if self.instance and self.instance.pk and self.instance.fecha_evento:
+            mexico_tz = pytz.timezone('America/Mexico_City')
+            fecha_mexico = self.instance.fecha_evento.astimezone(mexico_tz)
+            # Convertir a formato datetime-local (sin timezone)
+            fecha_local_str = fecha_mexico.strftime('%Y-%m-%dT%H:%M')
+            self.initial['fecha_evento'] = fecha_local_str
     
     def clean_fecha_evento(self):
-        """Validar que la fecha sea válida"""
+        """Validar que la fecha sea válida y convertir a UTC"""
         fecha = self.cleaned_data.get('fecha_evento')
         if fecha:
-            # Convertir a zona de México si es necesario
             mexico_tz = pytz.timezone('America/Mexico_City')
             
             # Si la fecha no tiene zona horaria, asumimos que es en zona de México
@@ -89,7 +102,7 @@ class EventoForm(forms.ModelForm):
             if fecha < fecha_limite:
                 raise ValidationError("La fecha del evento no puede ser mayor a 1 año atrás.")
             
-            # Convertir a UTC para almacenamiento (sin usar timezone.utc)
+            # Convertir a UTC para almacenamiento
             fecha_utc = fecha.astimezone(pytz.UTC)
             return fecha_utc
         
@@ -120,7 +133,6 @@ class EventoForm(forms.ModelForm):
             cleaned_data['representante'] = ''
         
         return cleaned_data
-
 
 class FiltroEventosForm(forms.Form):
     """Formulario para filtrar eventos - CORREGIDO"""

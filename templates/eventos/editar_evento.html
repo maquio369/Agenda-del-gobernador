@@ -5,29 +5,423 @@
 
 {% block extra_css %}
 <style>
-    .form-container {
-        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        min-height: 100vh;
-        padding: 2rem 0;
+/* Variables CSS personalizadas */
+:root {
+    --pantone-teal: #009885;
+    --pantone-black: #2b2b2b;
+    --pantone-beige: #f4a261;
+    --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89e 100%);
+    --gradient-accent: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --gradient-warning: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --gradient-beige: linear-gradient(135deg, #f4a261 0%, #e76f51 100%);
+    --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+.form-container {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+}
+
+.form-card {
+    background: white;
+    border-radius: 25px;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.form-header {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 2.5rem 2rem;
+    text-align: center;
+    position: relative;
+}
+
+.form-header::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: white;
+    border-radius: 25px 25px 0 0;
+    transform: translateY(10px);
+}
+
+.form-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.form-header .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.form-header .event-info {
+    font-size: 0.95rem;
+    opacity: 0.8;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.quick-form {
+    padding: 2.5rem;
+}
+
+.form-section {
+    background: #f8f9fb;
+    border-radius: 20px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--pantone-teal);
+    position: relative;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--pantone-black);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--gradient-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--pantone-black);
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.required-asterisk {
+    color: #e74c3c;
+    font-weight: bold;
+}
+
+.form-control {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-control:focus {
+    border-color: var(--pantone-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 152, 133, 0.15);
+    transform: translateY(-1px);
+}
+
+.form-control.is-valid {
+    border-color: #28a745;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='m2.3 6.73.94-.94 2.94 2.94L7.88 7 9 8.12 3.23 13.9z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath d='m5.5 5.5 1 1M6.5 5.5l-1 1'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right calc(0.375em + 0.1875rem) center;
+    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+}
+
+.form-select {
+    border-radius: 15px;
+    border: 2px solid #e9ecef;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.form-select:focus {
+    border-color: var(--pantone-teal);
+    box-shadow: 0 0 0 0.2rem rgba(0, 152, 133, 0.15);
+}
+
+.form-check {
+    background: white;
+    border-radius: 15px;
+    padding: 1rem;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.form-check:hover {
+    border-color: var(--pantone-teal);
+    transform: translateY(-1px);
+}
+
+.form-check-input:checked {
+    background-color: var(--pantone-teal);
+    border-color: var(--pantone-teal);
+}
+
+.form-check-label {
+    font-weight: 600;
+    color: var(--pantone-black);
+    cursor: pointer;
+}
+
+.btn-group-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.btn-toggle {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 15px;
+    background: white;
+    color: var(--pantone-black);
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.btn-toggle:hover {
+    border-color: var(--pantone-teal);
+    transform: translateY(-1px);
+}
+
+.btn-toggle.active {
+    background: var(--gradient-primary);
+    border-color: var(--pantone-teal);
+    color: white;
+}
+
+.btn-primary-custom {
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    width: 100%;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 152, 133, 0.4);
+    color: white;
+}
+
+.btn-secondary-custom {
+    background: #6c757d;
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    width: 100%;
+    justify-content: center;
+}
+
+.btn-secondary-custom:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    color: white;
+    text-decoration: none;
+}
+
+.info-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    padding: 1.5rem;
+    color: white;
+    margin-top: 2rem;
+}
+
+.info-section h6 {
+    color: white;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-section .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 15px;
+    padding: 1rem;
+    backdrop-filter: blur(5px);
+}
+
+.info-item strong {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+}
+
+.info-item span {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.event-warning {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border: none;
+    border-radius: 15px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    color: white;
+}
+
+.event-warning .alert-icon {
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.5rem;
+}
+
+.input-group-icon {
+    position: relative;
+}
+
+.input-group-icon .form-control {
+    padding-left: 3rem;
+}
+
+.input-group-icon .icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    z-index: 3;
+}
+
+.character-count {
+    font-size: 0.8rem;
+    color: #6c757d;
+    text-align: right;
+    margin-top: 0.25rem;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-section {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.form-section:nth-child(2) { animation-delay: 0.1s; }
+.form-section:nth-child(3) { animation-delay: 0.2s; }
+.form-section:nth-child(4) { animation-delay: 0.3s; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-header h1 {
+        font-size: 1.8rem;
+        flex-direction: column;
+        gap: 0.5rem;
     }
     
-    .form-card {
-        background: white;
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    .quick-form {
+        padding: 1.5rem;
     }
     
-    .form-header {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 15px 15px 0 0;
-        text-align: center;
+    .form-section {
+        padding: 1rem;
     }
     
-    .required-field {
-        color: #dc3545;
+    .info-section .info-grid {
+        grid-template-columns: 1fr;
     }
+}
+
+/* Estados especiales */
+.representante-section {
+    display: none;
+    animation: fadeInUp 0.3s ease-out;
+}
+
+.representante-section.show {
+    display: block;
+}
+
+.festivo-badge {
+    display: inline-block;
+    background: var(--gradient-beige);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
 </style>
 {% endblock %}
 
@@ -35,63 +429,107 @@
 <div class="form-container">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-10 col-xl-8">
                 <div class="form-card">
+                    <!-- Header del formulario -->
                     <div class="form-header">
-                        <h2 class="mb-0">
-                            <i class="fas fa-edit fa-2x mb-3"></i><br>
+                        <h1>
+                            <i class="fas fa-edit"></i>
                             Editar Evento
-                        </h2>
-                        <p class="mb-0">Modificar: {{ evento.nombre }}</p>
-                        <small class="opacity-75">
+                        </h1>
+                        <p class="subtitle">Modificación de evento existente</p>
+                        <p class="event-info">{{ evento.nombre }}</p>
+                        <small class="event-info">
                             Creado el {{ evento.fecha_creacion|date:"d/m/Y H:i" }}
                         </small>
                     </div>
-                    
-                    <div class="card-body p-4">
-                        <form method="post" class="needs-validation" novalidate>
-                            {% csrf_token %}
-                            
-                            <!-- Información del evento actual -->
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Editando evento:</strong> {{ evento.nombre }} - 
-                                {{ evento.fecha_evento|date:"d/m/Y H:i" }} en {{ evento.municipio.nombre }}
+
+                    <!-- Formulario principal -->
+                    <div class="quick-form">
+                        <!-- Campo oculto para manejar redirección -->
+                        {% if next_url %}
+                        <input type="hidden" name="next" value="{{ next_url }}">
+                        {% endif %}
+
+                        <!-- Información del evento actual -->
+                        <div class="event-warning">
+                            <div class="alert-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
                             </div>
-                            
-                            <!-- Formulario con Crispy Forms -->
-                            {% crispy form %}
-                        </form>
-                        
-                        <!-- Información adicional -->
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i class="fas fa-info-circle me-1"></i>Información del Evento
-                                        </h6>
-                                        <small class="text-muted">
-                                            <strong>Estado:</strong> {{ evento.estado_evento }}<br>
-                                            <strong>Creado por:</strong> {{ evento.creado_por.get_full_name|default:evento.creado_por.username }}<br>
-                                            <strong>Última actualización:</strong> {{ evento.fecha_actualizacion|date:"d/m/Y H:i" }}
-                                        </small>
+                            <strong>Editando evento:</strong> {{ evento.nombre }} - 
+                            {{ evento.fecha_evento|date:"d/m/Y H:i" }} en {{ evento.municipio.nombre }}
+                        </div>
+
+                        <form method="post" id="eventoForm" class="needs-validation" novalidate>
+                            {% csrf_token %}
+
+                            <!-- Sección: Formulario con Crispy Forms -->
+                            <div class="form-section">
+                                <div class="section-title">
+                                    <div class="section-icon">
+                                        <i class="fas fa-edit"></i>
                                     </div>
+                                    Modificar Información del Evento
+                                </div>
+
+                                <!-- Formulario con Crispy Forms -->
+                                {% crispy form %}
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <!-- Botón de cancelar inteligente -->
+                                    {% if next_url %}
+                                        <a href="{{ next_url }}" class="btn-secondary-custom">
+                                            <i class="fas fa-arrow-left"></i>
+                                            {% if viene_de_lista %}Volver a Lista{% elif viene_de_dashboard %}Volver a Dashboard{% else %}Cancelar{% endif %}
+                                        </a>
+                                    {% elif viene_de_lista %}
+                                        <a href="{% url 'lista_eventos' %}" class="btn-secondary-custom">
+                                            <i class="fas fa-list"></i>Volver a Lista
+                                        </a>
+                                    {% elif viene_de_dashboard %}
+                                        <a href="{% url 'dashboard' %}" class="btn-secondary-custom">
+                                            <i class="fas fa-tachometer-alt"></i>Volver al Dashboard
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'dashboard' %}" class="btn-secondary-custom">
+                                            <i class="fas fa-arrow-left"></i>Cancelar
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <button type="submit" form="eventoForm" class="btn-primary-custom">
+                                        <i class="fas fa-save"></i>
+                                        Guardar Cambios
+                                    </button>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="card bg-light">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i class="fas fa-cog me-1"></i>Acciones Adicionales
-                                        </h6>
-                                        <a href="{% url 'detalle_evento' evento.pk %}" class="btn btn-sm btn-outline-primary me-2">
-                                            <i class="fas fa-eye me-1"></i>Ver Detalles
-                                        </a>
-                                        <a href="{% url 'lista_eventos' %}" class="btn btn-sm btn-outline-secondary">
-                                            <i class="fas fa-list me-1"></i>Ver Todos
-                                        </a>
-                                    </div>
+                        </form>
+
+                        <!-- Información adicional -->
+                        <div class="info-section">
+                            <h6>
+                                <i class="fas fa-info-circle"></i>
+                                Información del Evento
+                            </h6>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <strong>Estado:</strong>
+                                    <span>{{ evento.estado_evento }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Creado por:</strong>
+                                    <span>{{ evento.creado_por.get_full_name|default:evento.creado_por.username }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Última actualización:</strong>
+                                    <span>{{ evento.fecha_actualizacion|date:"d/m/Y H:i" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <strong>Municipio:</strong>
+                                    <span>{{ evento.municipio.nombre }}</span>
                                 </div>
                             </div>
                         </div>
@@ -106,38 +544,202 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Validación del formulario
-    const form = document.querySelector('.needs-validation');
+    const form = document.getElementById('eventoForm');
     const asistioCheckbox = document.querySelector('#id_asistio_gobernador');
     const representanteField = document.querySelector('#id_representante');
-    const representanteGroup = representanteField.closest('.form-group');
+    const representanteGroup = representanteField ? representanteField.closest('.form-group') : null;
     
-    // Manejar visibilidad del campo representante
+    // Función para manejar botones toggle de asistencia del gobernador
+    function setupToggleButtons() {
+        const asistioButtons = document.querySelectorAll('[data-target="asistio_gobernador"]');
+        const asistioInput = document.getElementById('id_asistio_gobernador');
+        const representanteSection = document.getElementById('representante-section');
+        const representanteInput = document.getElementById('id_representante');
+
+        if (asistioButtons.length > 0 && asistioInput && representanteSection && representanteInput) {
+            asistioButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const value = this.dataset.value;
+                    const isAsistira = value === 'true';
+                    
+                    // Actualizar estado de botones
+                    asistioButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Actualizar input oculto
+                    asistioInput.value = value;
+                    
+                    // Mostrar/ocultar sección de representante
+                    if (isAsistira) {
+                        representanteSection.classList.remove('show');
+                        representanteInput.value = '';
+                        representanteInput.removeAttribute('required');
+                    } else {
+                        representanteSection.classList.add('show');
+                        representanteInput.setAttribute('required', 'required');
+                        setTimeout(() => representanteInput.focus(), 300);
+                    }
+                });
+            });
+        }
+    }
+
+    // Manejar visibilidad del campo representante (para campos checkbox tradicionales)
     function toggleRepresentante() {
-        if (asistioCheckbox.checked) {
-            representanteGroup.style.display = 'none';
-            representanteField.value = '';
-            representanteField.required = false;
-        } else {
-            representanteGroup.style.display = 'block';
-            representanteField.required = true;
+        if (asistioCheckbox && representanteGroup) {
+            if (asistioCheckbox.checked) {
+                representanteGroup.style.display = 'none';
+                representanteField.value = '';
+                representanteField.required = false;
+            } else {
+                representanteGroup.style.display = 'block';
+                representanteField.required = true;
+            }
         }
     }
     
-    // Inicializar estado
-    toggleRepresentante();
+    // Inicializar funcionalidad de botones toggle
+    setupToggleButtons();
     
-    // Escuchar cambios
-    asistioCheckbox.addEventListener('change', toggleRepresentante);
+    // Inicializar estado si existen los campos checkbox tradicionales
+    if (asistioCheckbox) {
+        toggleRepresentante();
+        asistioCheckbox.addEventListener('change', toggleRepresentante);
+    }
     
     // Validación en envío
     form.addEventListener('submit', function(event) {
-        if (!form.checkValidity()) {
-            event.preventDefault();
-            event.stopPropagation();
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Validar representante si es necesario
+        const asistioInput = document.getElementById('id_asistio_gobernador');
+        const representanteInput = document.getElementById('id_representante');
+        const asistira = asistioInput ? asistioInput.value === 'true' : true;
+        
+        if (!asistira && representanteInput && !representanteInput.value.trim()) {
+            representanteInput.setCustomValidity('Este campo es obligatorio cuando el Gobernador no asiste');
+            representanteInput.classList.add('is-invalid');
+            const representanteSection = document.getElementById('representante-section');
+            if (representanteSection) {
+                representanteSection.classList.add('show');
+                representanteInput.focus();
+            }
+            return false;
+        } else if (representanteInput) {
+            representanteInput.setCustomValidity('');
         }
+
+        // Validar todos los campos requeridos
+        const isValid = form.checkValidity();
         form.classList.add('was-validated');
+
+        if (isValid) {
+            // Mostrar indicador de carga
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            submitBtn.disabled = true;
+
+            // Enviar formulario
+            form.submit();
+        } else {
+            // Enfocar el primer campo con error
+            const firstInvalid = form.querySelector('.is-invalid, :invalid');
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
     });
+    
+    // Confirmación antes de salir si hay cambios sin guardar
+    let formChanged = false;
+    const formFields = form.querySelectorAll('input, select, textarea');
+    
+    formFields.forEach(field => {
+        field.addEventListener('change', () => {
+            formChanged = true;
+        });
+    });
+    
+    // Advertencia al salir
+    const cancelButtons = document.querySelectorAll('.btn-secondary-custom');
+    cancelButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            if (formChanged) {
+                if (!confirm('¿Está seguro de que desea salir? Los cambios no guardados se perderán.')) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+    
+    // No mostrar advertencia al guardar
+    form.addEventListener('submit', () => {
+        formChanged = false;
+        
+        // Mostrar indicador de carga
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        submitBtn.disabled = true;
+    });
+
+    // Función para contar caracteres en campos de texto
+    function setupCharacterCounters() {
+        const textFields = form.querySelectorAll('input[type="text"], textarea');
+        
+        textFields.forEach(field => {
+            if (field.hasAttribute('maxlength')) {
+                const maxLength = field.getAttribute('maxlength');
+                const counter = document.createElement('div');
+                counter.className = 'character-count';
+                counter.innerHTML = `<span class="count">0</span>/${maxLength} caracteres`;
+                
+                field.parentNode.appendChild(counter);
+                const countSpan = counter.querySelector('.count');
+                
+                field.addEventListener('input', function() {
+                    const length = this.value.length;
+                    countSpan.textContent = length;
+                    
+                    // Cambiar color si se acerca al límite
+                    if (length > maxLength * 0.9) {
+                        counter.style.color = '#e74c3c';
+                    } else if (length > maxLength * 0.75) {
+                        counter.style.color = '#f39c12';
+                    } else {
+                        counter.style.color = '#6c757d';
+                    }
+                });
+                
+                // Inicializar contador
+                field.dispatchEvent(new Event('input'));
+            }
+        });
+    }
+
+    // Inicializar contadores de caracteres
+    setupCharacterCounters();
+
+    // Enfocar primer campo al cargar
+    const primerCampo = form.querySelector('input:not([type="hidden"]), select, textarea');
+    if (primerCampo) {
+        setTimeout(() => primerCampo.focus(), 500);
+    }
+
+    console.log(`
+    🚀 ATAJOS DE TECLADO:
+    • Ctrl/Cmd + Enter: Guardar cambios
+    • Tab: Navegar entre campos
+    • Escape: Cancelar (con confirmación)
+    
+    💡 TIPS:
+    • Los cambios se detectan automáticamente
+    • Confirmación antes de salir sin guardar
+    • Validación en tiempo real
+    `);
 });
 </script>
 {% endblock %}

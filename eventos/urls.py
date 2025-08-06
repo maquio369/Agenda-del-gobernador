@@ -26,4 +26,5 @@ urlpatterns = [
     path('reportes/', views.reportes, name='reportes'),
     path('reportes/excel/', views.generar_excel, name='generar_excel'),
     path('estadisticas/', views.estadisticas, name='estadisticas'),
+    
 ]

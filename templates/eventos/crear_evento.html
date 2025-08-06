@@ -695,20 +695,7 @@
                             </div>
                         </form>
 
-                        <!-- Tips rápidos -->
-                        <div class="quick-tips">
-                            <h6>
-                                <i class="fas fa-lightbulb"></i>
-                                Tips para una captura rápida
-                            </h6>
-                            <ul>
-                                <li><strong>Nombre:</strong> Sea específico y claro (ej: "Inauguración Hospital Regional" vs "Evento")</li>
-                                <li><strong>Lugar:</strong> Incluya dirección específica para facilitar la logística</li>
-                                <li><strong>Responsable:</strong> Nombre completo y cargo de quien organiza o invita</li>
-                                <li><strong>Fecha:</strong> Verifique la fecha y hora correctas antes de guardar</li>
-                                <li><strong>Tip:</strong> Use Tab para navegar rápidamente entre campos</li>
-                            </ul>
-                        </div>
+                      
                     </div>
                 </div>
             </div>
@@ -717,12 +704,7 @@
 </div>
 
 <!-- Botón flotante para dispositivos móviles -->
-<div class="floating-save d-md-none">
-    <button type="submit" form="eventoForm" class="btn-primary-custom">
-        <i class="fas fa-save"></i>
-        Guardar
-    </button>
-</div>
+
 {% endblock %}
 
 {% block extra_js %}
@@ -1075,18 +1057,7 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => primerCampo.focus(), 500);
     }
 
-    // Mensaje de bienvenida para ayuda rápida
-    console.log(`
-    🚀 ATAJOS DE TECLADO:
-    • Ctrl/Cmd + Enter: Guardar evento
-    • Tab: Navegar entre campos
-    • Escape: Cancelar (con confirmación)
-    
-    💡 TIPS:
-    • Los datos se guardan automáticamente como borrador
-    • Use las sugerencias de autocompletado
-    • Los campos se validan en tiempo real
-    `);
+  
 });
 </script>
 {% endblock %}

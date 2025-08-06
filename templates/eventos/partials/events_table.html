@@ -17,9 +17,8 @@
             <tbody>
                 {% for evento in eventos %}
                 <tr class="enhanced-event-row {{ evento.estado_evento|lower }}" 
-                    data-bs-toggle="modal" 
-                    data-bs-target="#eventModal" 
-                    data-event-id="{{ evento.id }}">
+                    onclick="loadEventModal({{ evento.pk }})"
+                    style="cursor: pointer;">
                     <td>
                         <div class="event-info">
                             <h6 class="event-name">{{ evento.nombre|truncatechars:45 }}</h6>
@@ -75,17 +74,16 @@
                             </span>
                         {% endif %}
                     </td>
-                    <td>
+                    <td onclick="event.stopPropagation();">
                         <div class="action-buttons">
                             <button type="button" 
                                     class="btn-action view"
-                                    onclick="event.stopPropagation(); loadEventModal({{ evento.pk }})"
+                                    onclick="loadEventModal({{ evento.pk }})"
                                     title="Ver detalles">
                                 <i class="fas fa-eye"></i>
                             </button>
                             <a href="{% url 'editar_evento' evento.pk %}" 
                                class="btn-action edit"
-                               onclick="event.stopPropagation()"
                                title="Editar evento">
                                 <i class="fas fa-edit"></i>
                             </a>
@@ -98,7 +96,7 @@
     </div>
 </div>
 
-<!-- Paginación -->
+<!-- Paginación con solo 3 páginas numeradas -->
 {% if page_obj.paginator.num_pages > 1 %}
 <div class="enhanced-pagination fade-in" id="pagination-container">
     <div class="pagination-header">
@@ -138,58 +136,23 @@
             </li>
         {% endif %}
         
-        <!-- Página anterior -->
+        <!-- Páginas numeradas (solo 3: anterior, actual, siguiente) -->
+        <!-- Página anterior numerada -->
         {% if page_obj.has_previous %}
             <li class="page-item">
-                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" title="Página anterior" data-page="{{ page_obj.previous_page_number }}">
-                    <i class="fas fa-angle-left"></i>
-                    Anterior
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    <i class="fas fa-angle-left"></i>
-                    Anterior
-                </span>
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" data-page="{{ page_obj.previous_page_number }}">{{ page_obj.previous_page_number }}</a>
             </li>
         {% endif %}
         
-        <!-- Páginas numeradas -->
-        {% for num in page_obj.paginator.page_range %}
-            {% if page_obj.number == num %}
-                <li class="page-item active">
-                    <span class="page-link">{{ num }}</span>
-                </li>
-            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                <li class="page-item">
-                    <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" data-page="{{ num }}">{{ num }}</a>
-                </li>
-            {% elif num == 1 or num == page_obj.paginator.num_pages %}
-                <li class="page-item">
-                    <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}" data-page="{{ num }}">{{ num }}</a>
-                </li>
-            {% elif num == page_obj.number|add:'-4' or num == page_obj.number|add:'4' %}
-                <li class="page-item disabled">
-                    <span class="pagination-separator">...</span>
-                </li>
-            {% endif %}
-        {% endfor %}
+        <!-- Página actual -->
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }}</span>
+        </li>
         
-        <!-- Página siguiente -->
+        <!-- Página siguiente numerada -->
         {% if page_obj.has_next %}
             <li class="page-item">
-                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" title="Página siguiente" data-page="{{ page_obj.next_page_number }}">
-                    Siguiente
-                    <i class="fas fa-angle-right"></i>
-                </a>
-            </li>
-        {% else %}
-            <li class="page-item disabled">
-                <span class="page-link">
-                    Siguiente
-                    <i class="fas fa-angle-right"></i>
-                </span>
+                <a class="page-link ajax-page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" data-page="{{ page_obj.next_page_number }}">{{ page_obj.next_page_number }}</a>
             </li>
         {% endif %}
         

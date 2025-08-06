@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,6 +12,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
+        /* Variables de color del proyecto */
+        :root {
+            --pantone-magenta: #C90166; /* PANTONE P 69-70 C */
+            --pantone-magenta-rgb: 201, 1, 102;
+            --pantone-teal: #009885;
+            --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89a 50%, #009885 100%);
+            --gradient-magenta: linear-gradient(135deg, #C90166 0%, #E01B7D 50%, #C90166 100%);
+        }
+
         /* Estilo para el botón de logout en el dropdown */
         .dropdown-item.logout-btn {
             background: none;
@@ -24,6 +34,53 @@
         .dropdown-item.logout-btn:hover {
             background-color: #e9ecef;
         }
+
+        /* === LOGO EN NAVBAR === */
+        .navbar-logo {
+            width: 50px;
+            height: 50px;
+            margin-right: 8px;
+            vertical-align: middle;
+            filter: brightness(0) invert(1); /* Convierte el logo a blanco para navbar oscuro */
+            transition: all 0.3s ease;
+            object-fit: contain;
+            /* Recorta el espacio en blanco y hace zoom al contenido central */
+            transform: scale(1.8);
+            margin-left: 6px;
+            margin-right: 14px;
+        }
+
+        .navbar-brand:hover .navbar-logo {
+            transform: scale(2.0);
+            filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255,255,255,0.5));
+        }
+
+        /* Responsive para móviles */
+        @media (max-width: 768px) {
+            .navbar-logo {
+                width: 40px;
+                height: 40px;
+                transform: scale(1.7);
+                margin-right: 10px;
+            }
+            
+            .navbar-brand:hover .navbar-logo {
+                transform: scale(1.9);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-logo {
+                width: 35px;
+                height: 35px;
+                transform: scale(1.6);
+                margin-right: 8px;
+            }
+            
+            .navbar-brand:hover .navbar-logo {
+                transform: scale(1.8);
+            }
+        }
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -31,11 +88,11 @@
 <body>
     <!-- Navbar (solo si el usuario está autenticado) -->
     {% if user.is_authenticated %}
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: var(--gradient-magenta);">
         <div class="container">
             <a class="navbar-brand" href="{% url 'dashboard' %}">
-                <i class="fas fa-calendar-alt me-2"></i>
-                Sistema de Eventos del Gobernador
+                <img src="{% static 'img/jama_Mesa.png' %}" alt="Logo Gobierno de Chiapas" class="navbar-logo">
+                Agenda Del Gobernador
             </a>
             
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -46,7 +103,7 @@
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'dashboard' %}">
-                            <i class="fas fa-home me-1"></i>Dashboard
+                            <i class="fas fa-home me-1"></i>Inicio
                         </a>
                     </li>
                     <li class="nav-item">
