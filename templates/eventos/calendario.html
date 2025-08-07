@@ -645,6 +645,161 @@
         flex-wrap: wrap;
     }
 }
+
+@media (max-width: 768px) {
+    .header-title {
+        font-size: 1.5rem;
+    }
+
+    .header-subtitle {
+        font-size: 1rem;
+    }
+
+    .calendar-controls {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .month-navigation {
+        justify-content: center;
+    }
+
+    .current-month {
+        font-size: 1.2rem;
+        min-width: auto;
+    }
+
+    .calendar-grid {
+        padding: 0.5rem; /* Reducir padding */
+    }
+
+    /* SOLUCION PRINCIPAL: Hacer la tabla responsive */
+    .calendar-table {
+        min-width: 100%;
+        table-layout: fixed; /* Distribuir columnas uniformemente */
+    }
+
+    .calendar-header th {
+        padding: 0.5rem 0.2rem;
+        font-size: 0.7rem;
+        /* Usar abreviaciones en móviles */
+    }
+
+    .calendar-day {
+        height: 80px; /* Reducir altura */
+        padding: 0.3rem;
+        font-size: 0.8rem;
+    }
+
+    .day-number {
+        font-size: 0.9rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .event-item {
+        padding: 0.2rem 0.3rem;
+        font-size: 0.6rem;
+        margin-bottom: 0.15rem;
+        border-radius: 4px;
+    }
+
+    .event-time {
+        font-size: 0.55rem;
+        margin-bottom: 0.05rem;
+    }
+
+    .event-title {
+        line-height: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .more-events {
+        padding: 0.1rem 0.2rem;
+        font-size: 0.6rem;
+        border-radius: 3px;
+    }
+
+    /* Ocultar días de otros meses en móviles para dar más espacio */
+    .calendar-day.other-month {
+        display: none;
+    }
+}
+
+/* Para móviles muy pequeños */
+@media (max-width: 480px) {
+    .calendar-container {
+        padding: 1rem 0;
+    }
+
+    .calendar-card {
+        margin: 0 0.5rem;
+        border-radius: 16px;
+    }
+
+    .calendar-grid {
+        padding: 0.25rem;
+    }
+
+    .calendar-table {
+        border-spacing: 2px;
+    }
+
+    .calendar-header th {
+        padding: 0.4rem 0.1rem;
+        font-size: 0.65rem;
+    }
+
+    .calendar-day {
+        height: 70px;
+        padding: 0.2rem;
+    }
+
+    .day-number {
+        font-size: 0.8rem;
+    }
+
+    .event-item {
+        font-size: 0.55rem;
+        padding: 0.15rem 0.25rem;
+    }
+
+    .event-time {
+        display: none; /* Ocultar hora en móviles muy pequeños */
+    }
+
+    /* Botones de navegación más pequeños */
+    .btn-nav {
+        min-width: 35px;
+        height: 35px;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-create {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ALTERNATIVA: Layout en tarjetas para móviles muy pequeños */
+@media (max-width: 360px) {
+    /* Cambiar a vista de tarjetas en móviles muy pequeños */
+    .calendar-table {
+        display: none;
+    }
+
+    .calendar-grid::after {
+        content: '';
+        display: block;
+    }
+
+    /* Aquí podrías agregar una vista alternativa tipo tarjetas si es necesario */
+}
 </style>
 {% endblock %}
 
@@ -773,6 +928,25 @@ function renderCalendar() {
     // Update month display
     document.getElementById('currentMonth').textContent = `${months[month]} ${year}`;
     
+    // Detectar si es móvil
+    const isMobile = window.innerWidth <= 768;
+    
+    // Actualizar headers de días según el dispositivo
+    const calendarHeaders = document.querySelectorAll('.calendar-header th');
+    if (isMobile) {
+        // Usar abreviaciones en móviles
+        const shortDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        calendarHeaders.forEach((header, index) => {
+            header.textContent = shortDays[index];
+        });
+    } else {
+        // Usar nombres completos en desktop
+        const fullDays = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        calendarHeaders.forEach((header, index) => {
+            header.textContent = fullDays[index];
+        });
+    }
+    
     // Get first day of month and number of days
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -816,7 +990,8 @@ function renderCalendar() {
                 
                 // Add events for this date
                 const dayEvents = eventsData.filter(event => event.date === cellDate);
-                const maxVisibleEvents = 3;
+                // Reducir eventos visibles en móviles
+                const maxVisibleEvents = isMobile ? 2 : 3;
                 
                 dayEvents.slice(0, maxVisibleEvents).forEach(event => {
                     let eventClass = 'event-item';
@@ -824,10 +999,16 @@ function renderCalendar() {
                     if (event.estado === 'finalizado') eventClass += ' finalizado';
                     if (event.estado === 'cancelado') eventClass += ' cancelado';
                     
+                    // Truncar título en móviles
+                    let eventTitle = event.title;
+                    if (isMobile && eventTitle.length > 15) {
+                        eventTitle = eventTitle.substring(0, 12) + '...';
+                    }
+                    
                     cellHTML += `
                         <div class="${eventClass}" onclick="showEventDetail(${event.id})">
-                            <div class="event-time">${event.time}</div>
-                            <div class="event-title">${event.title}</div>
+                            ${!isMobile ? `<div class="event-time">${event.time}</div>` : ''}
+                            <div class="event-title">${eventTitle}</div>
                         </div>
                     `;
                 });
@@ -836,7 +1017,7 @@ function renderCalendar() {
                 if (dayEvents.length > maxVisibleEvents) {
                     cellHTML += `
                         <div class="more-events" onclick="showDayEvents('${cellDate}')">
-                            +${dayEvents.length - maxVisibleEvents} más
+                            +${dayEvents.length - maxVisibleEvents}
                         </div>
                     `;
                 }
@@ -856,6 +1037,19 @@ function renderCalendar() {
         }
     }
 }
+
+// AGREGAR ESTA FUNCIÓN PARA REAJUSTAR EN CAMBIO DE ORIENTACIÓN
+window.addEventListener('resize', function() {
+    // Rerender calendar when orientation changes
+    renderCalendar();
+});
+
+window.addEventListener('orientationchange', function() {
+    // Esperar un poco para que el cambio de orientación se complete
+    setTimeout(() => {
+        renderCalendar();
+    }, 100);
+});
 
 // Función para mostrar detalles del evento usando el modal existente
 function showEventDetail(eventId) {
