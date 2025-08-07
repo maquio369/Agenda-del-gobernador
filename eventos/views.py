@@ -12,6 +12,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from datetime import timedelta, datetime
 import json
 import pytz
+from .utils import get_mexico_timezone, convert_to_mexico_time, format_event_date
 
 # Importaciones para reportes
 from openpyxl import Workbook
@@ -668,6 +669,80 @@ def estadisticas(request):
     }
     
     return render(request, 'estadisticas/estadisticas.html', context)
+
+
+# Vistas para el calendario
+@login_required
+def calendario(request):
+    """Vista para mostrar el calendario de eventos"""
+    return render(request, 'eventos/calendario.html')
+
+@login_required
+def eventos_calendario_api(request):
+    """API para obtener eventos del calendario en formato JSON"""
+    # Obtener parámetros de fecha del request
+    year = request.GET.get('year')
+    month = request.GET.get('month')
+    
+    # Si no se especifica año/mes, usar el actual
+    if not year or not month:
+        from .utils import get_current_mexico_time
+        now = get_current_mexico_time()
+        year = now.year
+        month = now.month
+    else:
+        year = int(year)
+        month = int(month)
+    
+    # Crear fechas de inicio y fin del mes
+    from datetime import datetime
+    import calendar
+    from .utils import get_mexico_timezone
+    
+    # Primer día del mes
+    fecha_inicio = datetime(year, month, 1)
+    
+    # Último día del mes
+    ultimo_dia = calendar.monthrange(year, month)[1]
+    fecha_fin = datetime(year, month, ultimo_dia, 23, 59, 59)
+    
+    # Obtener eventos del mes con timezone awareness
+    mexico_tz = get_mexico_timezone()
+    fecha_inicio = mexico_tz.localize(fecha_inicio)
+    fecha_fin = mexico_tz.localize(fecha_fin)
+    
+    eventos = Evento.objects.filter(
+        fecha_evento__gte=fecha_inicio,
+        fecha_evento__lte=fecha_fin
+    ).select_related('municipio', 'creado_por').order_by('fecha_evento')
+    
+    # Preparar datos para el calendario
+    eventos_data = []
+    for evento in eventos:
+        # Actualizar estado automáticamente
+        evento.actualizar_estado_automatico()
+        
+        # Usar utilidad para formatear fecha
+        from .utils import format_event_date
+        fecha_formateada = format_event_date(evento)
+        
+        eventos_data.append({
+            'id': evento.id,
+            'title': evento.nombre,
+            'date': fecha_formateada['date'],
+            'time': fecha_formateada['time'],
+            'location': f"{evento.lugar}, {evento.municipio.nombre}",
+            'description': evento.descripcion or 'Sin descripción',
+            'estado': evento.estado,
+            'es_festivo': evento.es_festivo,
+            'asistio_gobernador': evento.asistio_gobernador,
+            'responsable': evento.responsable,
+            'attendees': 0,
+            'municipio': evento.municipio.nombre,
+            'full_location': evento.lugar,
+        })
+    
+    return JsonResponse({'eventos': eventos_data}) 
 
 
     

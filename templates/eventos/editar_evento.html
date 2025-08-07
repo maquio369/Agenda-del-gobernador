@@ -508,31 +508,7 @@
                             </div>
                         </form>
 
-                        <!-- Información adicional -->
-                        <div class="info-section">
-                            <h6>
-                                <i class="fas fa-info-circle"></i>
-                                Información del Evento
-                            </h6>
-                            <div class="info-grid">
-                                <div class="info-item">
-                                    <strong>Estado:</strong>
-                                    <span>{{ evento.estado_evento }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Creado por:</strong>
-                                    <span>{{ evento.creado_por.get_full_name|default:evento.creado_por.username }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Última actualización:</strong>
-                                    <span>{{ evento.fecha_actualizacion|date:"d/m/Y H:i" }}</span>
-                                </div>
-                                <div class="info-item">
-                                    <strong>Municipio:</strong>
-                                    <span>{{ evento.municipio.nombre }}</span>
-                                </div>
-                            </div>
-                        </div>
+                       
                     </div>
                 </div>
             </div>

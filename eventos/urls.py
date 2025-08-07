@@ -11,6 +11,12 @@ urlpatterns = [
     path('eventos/editar/<int:pk>/', views.editar_evento, name='editar_evento'),
     path('eventos/detalle/<int:pk>/', views.detalle_evento, name='detalle_evento'),
     path('eventos/lista/', views.lista_eventos, name='lista_eventos'),
+
+
+
+    # NUEVA RUTA PARA EL CALENDARIO
+    path('calendario/', views.calendario, name='calendario'),
+    path('api/eventos-calendario/', views.eventos_calendario_api, name='eventos_calendario_api'),
     
     # Acciones de eventos
     path('eventos/finalizar/<int:pk>/', views.finalizar_evento, name='finalizar_evento'),

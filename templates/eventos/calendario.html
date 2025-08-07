@@ -1,0 +1,1051 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Calendario de Eventos - Sistema de Eventos del Gobernador{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-teal: #009885;
+        --primary-magenta: #C90166;
+        --primary-red: #AE192D;
+        --primary-black: #010101;
+        --primary-beige: #D3C2B4;
+        --gradient-primary: linear-gradient(135deg, #009885 0%, #00b89a 50%, #009885 100%);
+        --gradient-accent: linear-gradient(135deg, #C90166 0%, #AE192D 100%);
+        --shadow-primary: 0 20px 40px rgba(0, 152, 133, 0.15);
+        --shadow-secondary: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+        background: linear-gradient(135deg, #f8fffe 0%, #e8f5f3 50%, #f0f8f7 100%);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow-x: hidden;
+    }
+
+    /* Header */
+    .header {
+        background: var(--gradient-primary);
+        padding: 1.5rem 0;
+        box-shadow: var(--shadow-secondary);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: 
+            radial-gradient(circle at 30% 70%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 30%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(2px, -2px) rotate(1deg); }
+        66% { transform: translate(-2px, 2px) rotate(-1deg); }
+    }
+
+    .header-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .header-title {
+        color: white;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        letter-spacing: -0.02em;
+    }
+
+    .header-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.1rem;
+        font-weight: 400;
+        margin: 0;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Calendar Container */
+    .calendar-container {
+        padding: 2rem 0;
+    }
+
+    .calendar-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        box-shadow: var(--shadow-primary);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+
+    /* Calendar Controls */
+    .calendar-controls {
+        background: rgba(248, 255, 254, 0.8);
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(211, 194, 180, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .month-navigation {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .btn-nav {
+        background: var(--gradient-primary);
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 152, 133, 0.3);
+        cursor: pointer;
+        min-width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-nav:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 152, 133, 0.4);
+        background: linear-gradient(135deg, #00a691 0%, #00c7a6 50%, #00a691 100%);
+    }
+
+    .current-month {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--primary-black);
+        min-width: 200px;
+        text-align: center;
+    }
+
+    .btn-create {
+        background: var(--gradient-accent);
+        border: none;
+        border-radius: 12px;
+        padding: 0.75rem 1.5rem;
+        color: white;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(201, 1, 102, 0.3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(201, 1, 102, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    /* Calendar Grid */
+    .calendar-grid {
+        padding: 2rem;
+    }
+
+    .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    .calendar-header {
+        background: var(--gradient-primary);
+    }
+
+    .calendar-header th {
+        padding: 1rem;
+        color: white;
+        font-weight: 600;
+        text-align: center;
+        font-size: 1rem;
+        letter-spacing: 0.02em;
+        border: none;
+    }
+
+    .calendar-day {
+        height: 120px;
+        vertical-align: top;
+        border: 1px solid #e8f0fe;
+        padding: 0.75rem;
+        position: relative;
+        background: white;
+        transition: all 0.3s ease;
+    }
+
+    .calendar-day:hover {
+        background: rgba(0, 152, 133, 0.02);
+    }
+
+    .calendar-day.other-month {
+        background: #f8f9fa;
+        color: #6c757d;
+    }
+
+    .calendar-day.today {
+        background: rgba(0, 152, 133, 0.1);
+        border-color: var(--primary-teal);
+        box-shadow: inset 0 0 0 2px var(--primary-teal);
+    }
+
+    .day-number {
+        font-weight: 600;
+        color: var(--primary-black);
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .calendar-day.other-month .day-number {
+        color: #adb5bd;
+    }
+
+    .calendar-day.today .day-number {
+        color: var(--primary-teal);
+        font-weight: 700;
+    }
+
+    /* Events */
+    .event-item {
+        background: var(--gradient-primary);
+        color: white;
+        padding: 0.3rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        line-height: 1.2;
+        display: block;
+        text-decoration: none;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .event-item:hover {
+        transform: scale(1.02);
+        background: linear-gradient(135deg, #00a691 0%, #00c7a6 50%, #00a691 100%);
+        color: white;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(0, 152, 133, 0.4);
+    }
+
+    .event-item.festivo {
+        background: var(--gradient-accent);
+    }
+
+    .event-item.finalizado {
+        background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+    }
+
+    .event-item.cancelado {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    }
+
+    .event-time {
+        font-size: 0.7rem;
+        opacity: 0.9;
+        margin-bottom: 0.1rem;
+    }
+
+    .event-title {
+        font-weight: 600;
+        line-height: 1.1;
+    }
+
+    /* More events indicator */
+    .more-events {
+        background: rgba(201, 1, 102, 0.1);
+        color: var(--primary-magenta);
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(201, 1, 102, 0.2);
+    }
+
+    .more-events:hover {
+        background: rgba(201, 1, 102, 0.2);
+    }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: var(--shadow-primary);
+    }
+
+    .modal-header {
+        background: var(--gradient-primary);
+        color: white;
+        border-radius: 20px 20px 0 0;
+        padding: 1.5rem 2rem;
+        border: none;
+    }
+
+    .modal-title {
+        font-weight: 700;
+        font-size: 1.3rem;
+    }
+
+    .btn-close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 1.5rem;
+        opacity: 0.8;
+        transition: opacity 0.3s ease;
+    }
+
+    .btn-close:hover {
+        opacity: 1;
+        color: white;
+    }
+
+    .modal-body {
+        padding: 2rem;
+    }
+
+    .event-detail {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid var(--primary-teal);
+    }
+
+    .event-detail-label {
+        font-weight: 600;
+        color: var(--primary-teal);
+        margin-bottom: 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .event-detail-value {
+        color: var(--primary-black);
+        font-size: 1rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: end;
+        margin-top: 1.5rem;
+    }
+
+    .btn-modal {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view {
+        background: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-edit {
+        background: #ffc107;
+        color: #333;
+        border: none;
+    }
+
+    .btn-modal:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        color: inherit;
+        text-decoration: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .header-title {
+            font-size: 1.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+        }
+
+        .calendar-controls {
+            padding: 1rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .month-navigation {
+            justify-content: center;
+        }
+
+        .current-month {
+            font-size: 1.2rem;
+            min-width: auto;
+        }
+
+        .calendar-grid {
+            padding: 1rem;
+        }
+
+        .calendar-day {
+            height: 100px;
+            padding: 0.5rem;
+        }
+
+        .calendar-header th {
+            padding: 0.75rem 0.5rem;
+            font-size: 0.9rem;
+        }
+    }
+
+
+    /* Estilos para el modal de lista de eventos del día */
+.day-events-container {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.day-events-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--primary-teal);
+}
+
+.date-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.date-info .date-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-black);
+    text-transform: capitalize;
+}
+
+.date-info .events-count {
+    margin: 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.event-card-list {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.event-card-list:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 152, 133, 0.15);
+    border-color: var(--primary-teal);
+}
+
+.event-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.event-time-badge {
+    background: var(--gradient-primary);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.event-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.event-status-programado {
+    background: #cce5ff;
+    color: #0066cc;
+}
+
+.event-status-en-curso {
+    background: #d4edda;
+    color: #155724;
+}
+
+.event-status-finalizado {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.event-status-cancelado {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.event-card-body {
+    padding: 1.5rem;
+}
+
+.event-card-title {
+    margin: 0 0 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary-black);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.festivo-badge {
+    background: var(--gradient-accent);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.event-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.event-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.event-detail-item i {
+    width: 16px;
+    text-align: center;
+}
+
+.event-description {
+    color: #6c757d;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    margin: 0;
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border-left: 3px solid #dee2e6;
+}
+
+.event-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+}
+
+.event-card-footer small {
+    font-size: 0.8rem;
+}
+
+/* Responsive para móviles */
+@media (max-width: 768px) {
+    .day-events-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.75rem;
+    }
+    
+    .date-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+    
+    .event-card-header {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .event-card-details {
+        gap: 0.75rem;
+    }
+    
+    .event-detail-item {
+        flex-wrap: wrap;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header -->
+<div class="header">
+    <div class="container">
+        <div class="header-content text-center">
+            <h1 class="header-title">
+                <i class="fas fa-calendar-alt me-3"></i>
+                Calendario de Eventos
+            </h1>
+            <p class="header-subtitle">
+                Vista mensual de la agenda del Gobernador de Chiapas
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Calendar Container -->
+<div class="calendar-container">
+    <div class="container">
+        <div class="calendar-card">
+            <!-- Calendar Controls -->
+            <div class="calendar-controls">
+                <div class="month-navigation">
+                    <button class="btn-nav" id="prevMonth">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="current-month" id="currentMonth">
+                        Enero 2025
+                    </div>
+                    <button class="btn-nav" id="nextMonth">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <a href="{% url 'crear_evento' %}" class="btn-create">
+                    <i class="fas fa-plus"></i>
+                    Crear Evento
+                </a>
+            </div>
+
+            <!-- Calendar Grid -->
+            <div class="calendar-grid">
+                <table class="calendar-table">
+                    <thead class="calendar-header">
+                        <tr>
+                            <th>Dom</th>
+                            <th>Lun</th>
+                            <th>Mar</th>
+                            <th>Mié</th>
+                            <th>Jue</th>
+                            <th>Vie</th>
+                            <th>Sáb</th>
+                        </tr>
+                    </thead>
+                    <tbody id="calendarBody">
+                        <!-- Calendar days will be generated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Event Detail Modal -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="eventModalLabel">
+                    <i class="fas fa-calendar-check me-2"></i>
+                    Detalles del Evento
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="eventModalBody">
+                <!-- Event details will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Calendar functionality
+let currentDate = new Date();
+const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+let eventsData = []; // Almacenar eventos obtenidos del backend
+
+// Event listeners
+document.getElementById('prevMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    loadCalendarData();
+});
+
+document.getElementById('nextMonth').addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    loadCalendarData();
+});
+
+// Función para cargar datos del calendario desde el backend
+async function loadCalendarData() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // JavaScript months are 0-indexed
+    
+    try {
+        const response = await fetch(`{% url 'eventos_calendario_api' %}?year=${year}&month=${month}`);
+        const data = await response.json();
+        eventsData = data.eventos;
+        renderCalendar();
+    } catch (error) {
+        console.error('Error loading calendar data:', error);
+        eventsData = [];
+        renderCalendar();
+    }
+}
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    
+    // Update month display
+    document.getElementById('currentMonth').textContent = `${months[month]} ${year}`;
+    
+    // Get first day of month and number of days
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    const calendarBody = document.getElementById('calendarBody');
+    calendarBody.innerHTML = '';
+    
+    let date = 1;
+    let nextMonthDate = 1;
+    
+    // Create calendar rows
+    for (let week = 0; week < 6; week++) {
+        const row = document.createElement('tr');
+        
+        for (let day = 0; day < 7; day++) {
+            const cell = document.createElement('td');
+            cell.className = 'calendar-day';
+            
+            if (week === 0 && day < firstDay) {
+                // Previous month days
+                const prevDate = daysInPrevMonth - firstDay + day + 1;
+                cell.classList.add('other-month');
+                cell.innerHTML = `<div class="day-number">${prevDate}</div>`;
+            } else if (date > daysInMonth) {
+                // Next month days
+                cell.classList.add('other-month');
+                cell.innerHTML = `<div class="day-number">${nextMonthDate}</div>`;
+                nextMonthDate++;
+            } else {
+                // Current month days
+                const cellDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                
+                // Check if today
+                const today = new Date();
+                if (year === today.getFullYear() && month === today.getMonth() && date === today.getDate()) {
+                    cell.classList.add('today');
+                }
+                
+                let cellHTML = `<div class="day-number">${date}</div>`;
+                
+                // Add events for this date
+                const dayEvents = eventsData.filter(event => event.date === cellDate);
+                const maxVisibleEvents = 3;
+                
+                dayEvents.slice(0, maxVisibleEvents).forEach(event => {
+                    let eventClass = 'event-item';
+                    if (event.es_festivo) eventClass += ' festivo';
+                    if (event.estado === 'finalizado') eventClass += ' finalizado';
+                    if (event.estado === 'cancelado') eventClass += ' cancelado';
+                    
+                    cellHTML += `
+                        <div class="${eventClass}" onclick="showEventDetail(${event.id})">
+                            <div class="event-time">${event.time}</div>
+                            <div class="event-title">${event.title}</div>
+                        </div>
+                    `;
+                });
+                
+                // Show "more events" if there are additional events
+                if (dayEvents.length > maxVisibleEvents) {
+                    cellHTML += `
+                        <div class="more-events" onclick="showDayEvents('${cellDate}')">
+                            +${dayEvents.length - maxVisibleEvents} más
+                        </div>
+                    `;
+                }
+                
+                cell.innerHTML = cellHTML;
+                date++;
+            }
+            
+            row.appendChild(cell);
+        }
+        
+        calendarBody.appendChild(row);
+        
+        // Stop creating rows if we've shown all days
+        if (date > daysInMonth && nextMonthDate > 7) {
+            break;
+        }
+    }
+}
+
+// Función para mostrar detalles del evento usando el modal existente
+function showEventDetail(eventId) {
+    const modalElement = document.getElementById('eventModal');
+    const modal = new bootstrap.Modal(modalElement);
+    const modalBody = document.getElementById('eventModalBody');
+    
+    // Limpiar cualquier modal anterior
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
+    document.body.style.paddingRight = '';
+    
+    // Mostrar loading en modal
+    modalBody.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-border" style="color: var(--primary-teal);" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando detalles del evento...</p>
+        </div>
+    `;
+    
+    // Mostrar el modal
+    modal.show();
+    
+    // Agregar listener para limpiar al cerrar
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+        modalBody.innerHTML = '';
+    }, { once: true });
+    
+    // Cargar contenido via AJAX usando tu vista existente
+    fetch(`{% url 'detalle_evento' 0 %}`.replace('0', eventId))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+            return response.text();
+        })
+        .then(html => {
+            modalBody.innerHTML = html;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            modalBody.innerHTML = `
+                <div class="alert alert-danger" style="border-radius: 12px; border: none; background: linear-gradient(135deg, #dc3545, #c82333); color: white;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h6 class="mb-1">Error al cargar</h6>
+                            <small>Error: ${error.message}</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+}
+
+// Función para cerrar el modal (ya tienes esta función definida)
+function closeEventModal() {
+    const modalElement = document.getElementById('eventModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+    
+    if (modal) {
+        modal.hide();
+    }
+    
+    setTimeout(() => {
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => backdrop.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+    }, 300);
+}
+
+// Función para mostrar todos los eventos de un día
+
+// Función para mostrar todos los eventos de un día con diseño mejorado
+function showDayEvents(date) {
+    const dayEvents = eventsData.filter(event => event.date === date);
+    const modalElement = document.getElementById('eventModal');
+    const modalBody = document.getElementById('eventModalBody');
+    
+    // Formatear fecha para mostrar más bonita
+    const dateObj = new Date(date + 'T00:00:00');
+    const options = { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    };
+    const formattedDate = dateObj.toLocaleDateString('es-MX', options);
+    
+    modalBody.innerHTML = `
+        <div class="day-events-container">
+            <!-- Header de la fecha -->
+            <div class="day-events-header">
+                <div class="date-icon">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="date-info">
+                    <h4 class="date-title">${formattedDate}</h4>
+                    <p class="events-count">${dayEvents.length} evento${dayEvents.length !== 1 ? 's' : ''} programado${dayEvents.length !== 1 ? 's' : ''}</p>
+                </div>
+            </div>
+            
+            <!-- Lista de eventos -->
+            <div class="events-list">
+                ${dayEvents.map(event => {
+                    let statusClass = 'event-status-programado';
+                    let statusIcon = 'fas fa-clock';
+                    let statusText = 'Programado';
+                    
+                    if (event.estado === 'en_curso') {
+                        statusClass = 'event-status-en-curso';
+                        statusIcon = 'fas fa-play-circle';
+                        statusText = 'En Curso';
+                    } else if (event.estado === 'finalizado') {
+                        statusClass = 'event-status-finalizado';
+                        statusIcon = 'fas fa-check-circle';
+                        statusText = 'Finalizado';
+                    } else if (event.estado === 'cancelado') {
+                        statusClass = 'event-status-cancelado';
+                        statusIcon = 'fas fa-times-circle';
+                        statusText = 'Cancelado';
+                    }
+                    
+                    return `
+                        <div class="event-card-list" onclick="showEventDetail(${event.id})">
+                            <div class="event-card-header">
+                                <div class="event-time-badge">
+                                    <i class="fas fa-clock me-1"></i>
+                                    ${event.time}
+                                </div>
+                                <div class="event-status ${statusClass}">
+                                    <i class="${statusIcon} me-1"></i>
+                                    ${statusText}
+                                </div>
+                            </div>
+                            
+                            <div class="event-card-body">
+                                <h6 class="event-card-title">
+                                    ${event.title}
+                                    ${event.es_festivo ? '<span class="festivo-badge"><i class="fas fa-star"></i> Festivo</span>' : ''}
+                                </h6>
+                                
+                                <div class="event-card-details">
+                                    <div class="event-detail-item">
+                                        <i class="fas fa-map-marker-alt text-primary"></i>
+                                        <span>${event.location}</span>
+                                    </div>
+                                    
+                                    <div class="event-detail-item">
+                                        <i class="fas fa-user-tie text-secondary"></i>
+                                        <span>${event.responsable}</span>
+                                    </div>
+                                    
+                                    <div class="event-detail-item">
+                                        <i class="fas fa-user-check ${event.asistio_gobernador ? 'text-success' : 'text-warning'}"></i>
+                                        <span>${event.asistio_gobernador ? 'Gobernador confirmado' : 'Asiste representante'}</span>
+                                    </div>
+                                </div>
+                                
+                                <p class="event-description">${event.description}</p>
+                            </div>
+                            
+                            <div class="event-card-footer">
+                                <small class="text-muted">Click para ver detalles completos</small>
+                                <i class="fas fa-chevron-right text-muted"></i>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
+    // Mostrar el modal
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+}
+
+
+// Inicializar calendario cuando la página carga
+document.addEventListener('DOMContentLoaded', function() {
+    loadCalendarData();
+});
+</script>
+{% endblock %}
