@@ -1,0 +1,65 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Test del Chatbot - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-robot me-2"></i>
+                        Test del Chatbot de Agenda
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>Ejemplos de consultas que puedes probar:</h5>
+                        <ul class="mb-0">
+                            <li><strong>Fechas:</strong> "¿Qué eventos hay hoy?", "Agenda de mañana", "Eventos de esta semana"</li>
+                            <li><strong>Municipios:</strong> "Eventos en Tuxtla Gutiérrez", "¿Cuándo visitó San Cristóbal?"</li>
+                            <li><strong>Estadísticas:</strong> "¿Cuántos eventos hay?", "Eventos del gobernador"</li>
+                            <li><strong>Búsqueda:</strong> "Buscar eventos de salud", "Eventos en parque"</li>
+                            <li><strong>Ayuda:</strong> Escribe "ayuda" para ver todas las opciones</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>💡 Consejos:</h6>
+                            <ul class="small text-muted">
+                                <li>Escribe de forma natural</li>
+                                <li>Puedes usar fechas relativas (hoy, mañana, etc.)</li>
+                                <li>Menciona municipios por su nombre</li>
+                                <li>El chatbot aprende de patrones, no de IA compleja</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>🎯 Funciones actuales:</h6>
+                            <ul class="small text-muted">
+                                <li>Consultas por fecha</li>
+                                <li>Consultas por municipio</li>
+                                <li>Estadísticas básicas</li>
+                                <li>Búsqueda por palabras clave</li>
+                                <li>Sistema de ayuda</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <p class="text-muted">
+                            <i class="fas fa-arrow-down me-2"></i>
+                            Haz clic en el botón flotante de la esquina inferior derecha para probar el chatbot
+                        </p>
+                        <button class="btn btn-primary" onclick="document.getElementById('chatbot-toggle').click()">
+                            <i class="fas fa-comments me-2"></i>
+                            Abrir Chatbot
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

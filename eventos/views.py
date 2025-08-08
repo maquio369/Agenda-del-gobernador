@@ -23,6 +23,12 @@ import io
 from .models import Evento, Municipio
 from .forms import EventoForm, FiltroEventosForm
 
+#importacion Chatbot
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from .chatbot import ChatbotAgenda
+
 # Vista principal - Dashboard
 @login_required
 def dashboard(request):
@@ -744,5 +750,54 @@ def eventos_calendario_api(request):
     
     return JsonResponse({'eventos': eventos_data}) 
 
+@login_required
+@require_http_methods(["POST"])
+def chatbot_api(request):
+    """API endpoint para el chatbot"""
+    try:
+        # Obtener el mensaje del request
+        data = json.loads(request.body)
+        mensaje = data.get('mensaje', '').strip()
+        
+        if not mensaje:
+            return JsonResponse({
+                'success': False,
+                'respuesta': 'Por favor, escribe una consulta.',
+                'error': 'Mensaje vacío'
+            })
+        
+        # Procesar la consulta con el chatbot
+        chatbot = ChatbotAgenda()
+        respuesta = chatbot.procesar_consulta(mensaje)
+        
+        # Log de la consulta (opcional, para mejorar el chatbot)
+        print(f"CHATBOT - Usuario: {request.user.username} | Consulta: {mensaje}")
+        
+        return JsonResponse({
+            'success': True,
+            'respuesta': respuesta,
+            'timestamp': timezone.now().isoformat()
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'respuesta': 'Error en el formato de la consulta.',
+            'error': 'JSON inválido'
+        }, status=400)
+        
+    except Exception as e:
+        print(f"ERROR CHATBOT: {str(e)}")
+        return JsonResponse({
+            'success': False,
+            'respuesta': 'Ocurrió un error procesando tu consulta. Inténtalo de nuevo.',
+            'error': str(e)
+        }, status=500)
 
+@login_required
+def chatbot_test(request):
+    """Vista de testing para el chatbot (solo en desarrollo)"""
+    if not settings.DEBUG:
+        return redirect('dashboard')
     
+    return render(request, 'chatbot/test.html')

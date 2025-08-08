@@ -32,5 +32,9 @@ urlpatterns = [
     path('reportes/', views.reportes, name='reportes'),
     path('reportes/excel/', views.generar_excel, name='generar_excel'),
     path('estadisticas/', views.estadisticas, name='estadisticas'),
+
+    # APIs del chatbot
+    path('api/chatbot/', views.chatbot_api, name='chatbot_api'),
+    path('chatbot/test/', views.chatbot_test, name='chatbot_test'),  # Solo para desarrollo
     
 ]
